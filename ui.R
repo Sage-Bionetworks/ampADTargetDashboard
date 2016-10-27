@@ -21,8 +21,8 @@ dashboardPage(
              box(width=NULL, htmlOutput('video'))
       ),
       column(width=8,
-             DT::dataTableOutput('edgeTable'),
-             box(width=NULL, visNetworkOutput("network", height = "350px"))
+             box(width=NULL, visNetworkOutput("network", height = "350px")),
+             DT::dataTableOutput('edgeTable')
       )
     )
   )
