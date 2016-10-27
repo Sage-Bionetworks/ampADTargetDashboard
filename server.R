@@ -6,13 +6,18 @@
 #
 
 library(shiny)
+library(DT)
 
 shinyServer(function(input, output) {
 
+  edges <- reactive({
+    network %>% filter(target == input$gene | feature == input$gene) %>% 
+      mutate(from=feature, to=target)
+  })
+  
   output$network <- renderVisNetwork({
     
-    edges <- network %>% filter(target == input$gene | feature == input$gene) %>% 
-      mutate(from=feature, to=target)
+    edges <- edges()
 
     nodes <- genes %>% filter(gene %in% edges$from | gene %in% edges$to) %>% 
       mutate(color=ifelse(gene == input$gene, "97C1FC", "FFD58F"))
@@ -20,6 +25,9 @@ shinyServer(function(input, output) {
     visNetwork(nodes, edges) %>% visEdges(arrows='to')
   })
 
+  output$edgeTable <- DT::renderDataTable(edges() %>% select(feature, target, coexpression, feature.fdr, feature.lfc, target.fdr, target.lfc),
+                                          options=list(lengthChange=FALSE, pageLength=5, dom="tp"))
+  
   output$status <- renderValueBox({
     whichGene <- genes %>% filter(gene==input$gene)
     

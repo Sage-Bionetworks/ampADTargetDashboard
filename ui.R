@@ -15,12 +15,13 @@ dashboardPage(
   dashboardBody(
     # Boxes need to be put in a row (or column)
     fluidRow(
-      column(width=5,
+      column(width=4,
              box(width=NULL, selectInput("gene", "Gene", choices=genes$gene)),
              valueBoxOutput("status", width=NULL),
              box(width=NULL, visNetworkOutput("network", height = "350px"))
       ),
-      column(width=7,
+      column(width=8,
+             DT::dataTableOutput('edgeTable'),
              box(width=NULL, htmlOutput('video'))
       )
     )
