@@ -14,10 +14,12 @@ vids <- c("https://www.youtube.com/embed/gc3Kd4ez1iY",
 network <- fread(getFileLocation(synGet("syn7346460", version=11)), 
                  data.table=FALSE) %>% 
   dplyr::filter(feature.assay=='TF', target.assay=='mrna',
-                from.state=='SC', to.state=='DE') %>% 
-  group_by(target) %>% 
-  slice(10) %>% 
-  ungroup()
+                from.state=='SC', to.state=='DE')
+
+highDegree <- network %>% count(target, sort=TRUE) %>% filter(n > 5)
+
+network <- network %>% 
+  filter(target %in% highDegree$target)
 
 genes <- network %>%
   select(feature, target) %>% 
