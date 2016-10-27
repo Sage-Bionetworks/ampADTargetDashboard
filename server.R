@@ -7,7 +7,7 @@
 
 library(shiny)
 library(DT)
-
+library(visNetwork)
 shinyServer(function(input, output) {
 
   edges <- reactive({
