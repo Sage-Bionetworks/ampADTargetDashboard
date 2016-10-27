@@ -18,7 +18,9 @@ shinyServer(function(input, output) {
   output$network <- renderVisNetwork({
     
     edges <- edges()
-
+    
+    validate(need(nrow(edges) <= 20, sprintf("Network too large (%s edges) for the gene '%s'; maximum number of edges to show is 20.", nrow(edges), input$gene)))
+    
     nodes <- genes %>% 
       dplyr::filter(gene %in% edges$from | gene %in% edges$to) %>% 
       dplyr::mutate(color=ifelse(gene == input$gene, "97C1FC", "FFD58F"))
