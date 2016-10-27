@@ -19,8 +19,9 @@ shinyServer(function(input, output) {
     
     edges <- edges()
 
-    nodes <- genes %>% filter(gene %in% edges$from | gene %in% edges$to) %>% 
-      mutate(color=ifelse(gene == input$gene, "97C1FC", "FFD58F"))
+    nodes <- genes %>% 
+      dplyr::filter(gene %in% edges$from | gene %in% edges$to) %>% 
+      dplyr::mutate(color=ifelse(gene == input$gene, "97C1FC", "FFD58F"))
     
     n <- visNetwork(nodes, edges) %>% visEdges(arrows='to')
     if (nrow(edges) <=10) {
