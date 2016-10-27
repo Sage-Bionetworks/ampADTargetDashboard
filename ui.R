@@ -18,11 +18,11 @@ dashboardPage(
       column(width=4,
              box(width=NULL, selectInput("gene", "Gene", choices=genes$gene)),
              valueBoxOutput("status", width=NULL),
-             box(width=NULL, visNetworkOutput("network", height = "350px"))
+             box(width=NULL, htmlOutput('video'))
       ),
       column(width=8,
              DT::dataTableOutput('edgeTable'),
-             box(width=NULL, htmlOutput('video'))
+             box(width=NULL, visNetworkOutput("network", height = "350px"))
       )
     )
   )

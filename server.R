@@ -22,7 +22,12 @@ shinyServer(function(input, output) {
     nodes <- genes %>% filter(gene %in% edges$from | gene %in% edges$to) %>% 
       mutate(color=ifelse(gene == input$gene, "97C1FC", "FFD58F"))
     
-    visNetwork(nodes, edges) %>% visEdges(arrows='to')
+    n <- visNetwork(nodes, edges) %>% visEdges(arrows='to')
+    if (nrow(edges) <=10) {
+      n <- n %>% visHierarchicalLayout()
+    }
+    
+    n
   })
 
   output$edgeTable <- DT::renderDataTable(edges() %>% select(feature, target, coexpression, feature.fdr, feature.lfc, target.fdr, target.lfc),
@@ -38,7 +43,7 @@ shinyServer(function(input, output) {
   output$video <- renderUI({
     whichGene <- genes %>% filter(gene==input$gene)
     
-    tags$iframe(src=whichGene$vid, height=350, width=623)
+    tags$iframe(src=whichGene$vid, height=300, width=534)
   })
   
   
