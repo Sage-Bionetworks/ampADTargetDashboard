@@ -19,16 +19,16 @@ shinyServer(function(input, output) {
     
     edges <- edges()
     
-    validate(need(nrow(edges) <= 20, sprintf("Network too large (%s edges) for the gene '%s'; maximum number of edges to show is 20.", nrow(edges), input$gene)))
+    validate(need(nrow(edges) <= 50, sprintf("Network too large (%s edges) for the gene '%s'; maximum number of edges to show is 50.", nrow(edges), input$gene)))
     
     nodes <- genes %>% 
       dplyr::filter(gene %in% edges$from | gene %in% edges$to) %>% 
       dplyr::mutate(color=ifelse(gene == input$gene, "97C1FC", "FFD58F"))
     
     n <- visNetwork(nodes, edges) %>% visEdges(arrows='to')
-    if (nrow(edges) <=10) {
-      n <- n %>% visHierarchicalLayout()
-    }
+    # if (nrow(edges) <=10) {
+    #   n <- n %>% visIgraphLayout()
+    # }
     
     n
   })
