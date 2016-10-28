@@ -18,7 +18,8 @@ dashboardPage(
       column(width=4,
              box(width=NULL, selectInput("gene", "Gene", choices=genes$gene)),
              valueBoxOutput("status", width=NULL),
-             box(width=NULL, htmlOutput('video'))
+             box(title="Nomination Video", solidHeader = TRUE, status="info", 
+                 width=NULL, htmlOutput('video'))
       ),
       column(width=8,
              box(width=NULL, visNetworkOutput("network", height = "350px")),
