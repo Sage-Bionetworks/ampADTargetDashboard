@@ -14,11 +14,24 @@ vids <- c("https://www.youtube.com/embed/gc3Kd4ez1iY",
 ddiData <- fread(getFileLocation(synGet("syn7537835")), 
                  data.table=FALSE)
 
-out <- queryMany(ddiData$GENE_SYMBOL, scopes="symbol", fields="ensembl.gene", species="human",
-                 returnall=TRUE)
-
 lillyData <- fread(getFileLocation(synGet('syn7525109')),
                    data.table=FALSE)
+
+
+out <- queryMany(unique(c(ddiData$GENE_SYMBOL, lillyData$GENE_SYMBOL)),
+                        scopes="symbol", fields="ensembl.gene", species="human",
+                 returnall=TRUE, size=1)
+
+res <- as.data.frame(out$response)
+
+# Two genes - CHRH1 (in DDI and Lilly) and MOAP1 (in Lilly) - have multiple
+# matches to some other chromosomes in Ensembl. Get only the first one.
+res <- res %>% mutate(ensembl=laply(ensembl, function(x) ifelse(is.null(x), '', x[[1]][1])))
+res[is.na(res$ensembl.gene), 'ensembl.gene'] <- res[is.na(res$ensembl.gene), 'ensembl']
+res <- res %>% select(-ensembl, -X_id)
+
+ddiData <- ddiData %>% left_join(res, by=c('GENE_SYMBOL'='query'))
+lillyData <- lillyData %>% left_join(res, by=c('GENE_SYMBOL'='query'))
 
 network <- fread(getFileLocation(synGet("syn7346460", version=11)), 
                  data.table=FALSE) %>% 
