@@ -11,6 +11,10 @@ vids <- c("https://www.youtube.com/embed/gc3Kd4ez1iY",
           "https://www.youtube.com/embed/DO5f5R4qW1s"
 )
 
+ddiData <- fread("~/Projects/AMP-AD/DDI_medium_list_processed.csv", data.table=FALSE) # synGet()
+out <- queryMany(ddiData$GENE_SYMBOL, scopes="symbol", fields="ensembl.gene", species="human",
+                 returnall=TRUE)
+
 network <- fread(getFileLocation(synGet("syn7346460", version=11)), 
                  data.table=FALSE) %>% 
   dplyr::filter(feature.assay=='TF', target.assay=='mrna',
