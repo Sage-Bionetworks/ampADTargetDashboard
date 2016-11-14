@@ -1,7 +1,7 @@
 library(synapseClient)
 library(data.table)
 library(dplyr)
-
+library(mygene)
 synapseLogin()
 
 vids <- c("https://www.youtube.com/embed/gc3Kd4ez1iY",
@@ -11,9 +11,14 @@ vids <- c("https://www.youtube.com/embed/gc3Kd4ez1iY",
           "https://www.youtube.com/embed/DO5f5R4qW1s"
 )
 
-ddiData <- fread("~/Projects/AMP-AD/DDI_medium_list_processed.csv", data.table=FALSE) # synGet()
+ddiData <- fread(getFileLocation(synGet("syn7537835")), 
+                 data.table=FALSE)
+
 out <- queryMany(ddiData$GENE_SYMBOL, scopes="symbol", fields="ensembl.gene", species="human",
                  returnall=TRUE)
+
+lillyData <- fread(getFileLocation(synGet('syn7525109')),
+                   data.table=FALSE)
 
 network <- fread(getFileLocation(synGet("syn7346460", version=11)), 
                  data.table=FALSE) %>% 
