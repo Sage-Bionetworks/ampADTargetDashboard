@@ -3,6 +3,8 @@ library(data.table)
 library(mygene)
 library(plyr)
 library(dplyr)
+library(igraph)
+
 synapseLogin()
 
 vids <- c("https://www.youtube.com/embed/gc3Kd4ez1iY",
@@ -54,3 +56,5 @@ res <- as.data.frame(out$response) %>% select(symbol, query)
 genesForNetwork <- genesForNetwork %>% 
   left_join(res, by=c('id'='query')) %>% 
   mutate(label=ifelse(is.na(symbol), gene, symbol))
+
+gg <- graph_from_data_frame(network)

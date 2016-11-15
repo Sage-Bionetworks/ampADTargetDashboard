@@ -8,30 +8,48 @@
 library(shiny)
 library(DT)
 library(visNetwork)
+library(igraph)
+
 shinyServer(function(input, output) {
 
   edges <- reactive({
     ensGene <- c(filter(lillyData, GENE_SYMBOL== input$gene)$ensembl.gene,
                  filter(ddiData, GENE_SYMBOL== input$gene)$ensembl.gene)
+
     
-    network %>% filter(var1 %in% ensGene | var2 %in% ensGene) %>% 
-      mutate(from=var1, to=var2)
+    gg.neighbors <- ego(gg, 1, V(gg)[V(gg)$name %in% ensGene])
+    
+    if (length(gg.neighbors) < 1) {
+      gg.neighbors <- c()
+    } else {
+      gg.neighbors <- gg.neighbors[[1]]
+    }
+    
+    foo <- induced_subgraph(gg, vids = gg.neighbors) %>%
+      toVisNetworkData()
+    foo
   })
   
   output$network <- renderVisNetwork({
     
-    edges <- edges()
-    validate(need(nrow(edges) > 0, sprintf("No edges for the gene '%s'.", input$gene)))
+    gg2 <- edges()    
+    validate(need(nrow(gg2$edges) > 0, sprintf("No edges for the gene '%s'.", input$gene)))
+    validate(need(nrow(gg2$edges) <= 50, sprintf("Network too large (%s edges) for the gene '%s'; maximum number of edges to show is 50.", nrow(edges), input$gene)))
     
-    validate(need(nrow(edges) <= 50, sprintf("Network too large (%s edges) for the gene '%s'; maximum number of edges to show is 50.", nrow(edges), input$gene)))
+    nodes <- gg2$nodes %>% 
+      select(id) %>% 
+      left_join(genesForNetwork, by='id') %>% 
+      select(gene, id, label) %>% 
+      dplyr::mutate(group=ifelse((label %in% geneTargetList) & (label != input$gene),
+                                 "target", "other")) %>% 
+      dplyr::mutate(group=ifelse(label == input$gene, "selected", group))
+      
+    print(nodes)
     
-    nodes <- genesForNetwork %>% 
-      dplyr::filter(gene %in% edges$from | gene %in% edges$to) %>% 
-      dplyr::mutate(group=ifelse(label %in% geneTargetList, "target", "other")) %>% 
-      dplyr::mutate(group=ifelse(label == input$gene, "selected", "other"))
-    
-    n <- visNetwork(nodes, edges) %>% 
+    n <- visNetwork(nodes, gg2$edges) %>% 
+      visPhysics(solver="forceAtlas2Based", stabilization = TRUE) %>% 
       visEdges(color='black') %>% 
+      visLegend() %>% 
       visGroups(groupname='selected', color='green') %>% 
       visGroups(groupname='target', color='#97C1FC') %>% 
       visGroups(groupname='other', color='#FFD58F')
@@ -43,7 +61,7 @@ shinyServer(function(input, output) {
     n
   })
 
-  output$edgeTable <- DT::renderDataTable(edges() %>% select(var1, var2),
+  output$edgeTable <- DT::renderDataTable(edges()$edges,
                                           options=list(lengthChange=FALSE, pageLength=5, dom="tp"))
   
   output$status <- renderValueBox({
