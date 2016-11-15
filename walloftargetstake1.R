@@ -41,8 +41,8 @@ edgeList2 = dplyr::select(edgeList2,var1,var2)
 
 write.csv(edgeList2,file='tempNetWoT.csv',quote=F,row.names=F)
 
-tempNetWoTObj = File('tempNetWoT.csv',parentId='syn7525109')
-
+tempNetWoTObj = File('tempNetWoT.csv',parentId='syn7525089')
+tempNetWoTObj = synStore(tempNetWoTObj,used=as.list('syn5909604'),executed = as.list('https://github.com/Sage-Bionetworks/WallOfTargets/blob/07fb97b5e0fbc5fc6d87ffc24405f9a3baa9241e/walloftargetstake1.R'))
 
 #share with Kenny
 
