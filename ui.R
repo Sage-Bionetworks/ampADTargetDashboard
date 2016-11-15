@@ -16,7 +16,7 @@ dashboardPage(
     # Boxes need to be put in a row (or column)
     fluidRow(
       column(width=4,
-             box(width=NULL, selectInput("gene", "Gene", choices=genes$gene)),
+             box(width=NULL, selectInput("gene", "Gene", choices=geneTargetList)),
              valueBoxOutput("status", width=NULL),
              box(title="Nomination Video", solidHeader = TRUE, status="info", 
                  width=NULL, htmlOutput('video'))
