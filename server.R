@@ -11,21 +11,31 @@ library(visNetwork)
 shinyServer(function(input, output) {
 
   edges <- reactive({
-    network %>% filter(target == input$gene | feature == input$gene) %>% 
-      mutate(from=feature, to=target)
+    ensGene <- c(filter(lillyData, GENE_SYMBOL== input$gene)$ensembl.gene,
+                 filter(ddiData, GENE_SYMBOL== input$gene)$ensembl.gene)
+    
+    network %>% filter(var1 %in% ensGene | var2 %in% ensGene) %>% 
+      mutate(from=var1, to=var2)
   })
   
   output$network <- renderVisNetwork({
     
     edges <- edges()
+    validate(need(nrow(edges) > 0, sprintf("No edges for the gene '%s'.", input$gene)))
     
     validate(need(nrow(edges) <= 50, sprintf("Network too large (%s edges) for the gene '%s'; maximum number of edges to show is 50.", nrow(edges), input$gene)))
     
-    nodes <- genes %>% 
+    nodes <- genesForNetwork %>% 
       dplyr::filter(gene %in% edges$from | gene %in% edges$to) %>% 
-      dplyr::mutate(color=ifelse(gene == input$gene, "97C1FC", "FFD58F"))
+      dplyr::mutate(group=ifelse(label %in% geneTargetList, "target", "other")) %>% 
+      dplyr::mutate(group=ifelse(label == input$gene, "selected", "other"))
     
-    n <- visNetwork(nodes, edges) %>% visEdges(arrows='to')
+    n <- visNetwork(nodes, edges) %>% 
+      visEdges(color='black') %>% 
+      visGroups(groupname='selected', color='green') %>% 
+      visGroups(groupname='target', color='#97C1FC') %>% 
+      visGroups(groupname='other', color='#FFD58F')
+      
     # if (nrow(edges) <=10) {
     #   n <- n %>% visIgraphLayout()
     # }
@@ -33,20 +43,16 @@ shinyServer(function(input, output) {
     n
   })
 
-  output$edgeTable <- DT::renderDataTable(edges() %>% select(feature, target, coexpression, feature.fdr, feature.lfc, target.fdr, target.lfc),
+  output$edgeTable <- DT::renderDataTable(edges() %>% select(var1, var2),
                                           options=list(lengthChange=FALSE, pageLength=5, dom="tp"))
   
   output$status <- renderValueBox({
-    whichGene <- genes %>% filter(gene==input$gene)
-    
-    valueBox(subtitle="Votes", value=whichGene$votes, 
-             color = whichGene$votesColor)
+    valueBox(subtitle="Votes", value=100, 
+             color = 'red')
   })
   
   output$video <- renderUI({
-    whichGene <- genes %>% filter(gene==input$gene)
-    
-    tags$iframe(src=whichGene$vid, height=300, width=534)
+    tags$iframe(src=vids[1], height=300, width=534)
   })
   
   
