@@ -37,6 +37,10 @@ res <- res %>% dplyr::select(-ensembl, -X_id)
 ddiData <- ddiData %>% left_join(res, by=c('GENE_SYMBOL'='query'))
 lillyData <- lillyData %>% left_join(res, by=c('GENE_SYMBOL'='query'))
 
+targetManifest <- ddiData %>%
+  arrange(GENE_SYMBOL) %>%
+  select(GENE_SYMBOL, Center, activity_direction)
+
 network <- fread(getFileLocation(synGet("syn7537683")), 
                  data.table=FALSE)
 
