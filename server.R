@@ -6,7 +6,6 @@
 #
 
 library(shiny)
-library(DT)
 library(visNetwork)
 library(igraph)
 
@@ -16,13 +15,14 @@ shinyServer(function(input, output, session) {
     targetManifest[as.numeric(input$targetlist_rows_selected), ]$GENE_SYMBOL
   })
   
-  output$targetlist <- DT::renderDataTable(targetManifest,
+  output$targetlist <- DT::renderDataTable(targetManifest %>% rename(`Gene`=GENE_SYMBOL),
                                           options=list(lengthChange=FALSE, 
-                                                       pageLength=15, dom="tp"), 
-                                          selection = 'single')
+                                                       pageLength=15, dom="tp"),
+                                          selection = list(mode='single', target='row', selected=1),
+                                          server = TRUE,
+                                          rownames = FALSE)
   
   observeEvent(input$getdetails, {
-    print(row)
     updateTabItems(session, "tabs", selected = "targetdetails")
   })
   
@@ -54,12 +54,9 @@ shinyServer(function(input, output, session) {
       select(id) %>% 
       left_join(genesForNetwork, by='id') %>% 
       select(gene, id, label) %>% 
-      dplyr::mutate(group=ifelse((label %in% geneTargetList) & (label != selectedGene()),
-                                 "target", "other")) %>% 
+      dplyr::mutate(group=ifelse(label %in% ddiData$GENE_SYMBOL, "target", "other")) %>% 
       dplyr::mutate(group=ifelse(label == selectedGene(), "selected", group))
       
-    print(nodes)
-    
     n <- visNetwork(nodes, gg2$edges) %>% 
       visPhysics(solver="forceAtlas2Based", stabilization = TRUE) %>% 
       visEdges(color='black') %>% 
@@ -77,15 +74,48 @@ shinyServer(function(input, output, session) {
 
   output$edgeTable <- DT::renderDataTable(edges()$edges,
                                           options=list(lengthChange=FALSE, pageLength=5, dom="tp"))
+
+  output$lilly <- renderInfoBox({
+    tmp <- lillyData %>% 
+      filter(GENE_SYMBOL == selectedGene()) %>% 
+      select(Score=Lilly_DrugEBIlity_Consensus_Score)
+    
+    print(lillyStatusColors[[as.character(tmp$Score)]])
+    
+    valueBox("Score",value = tmp$Score, 
+             color=lillyStatusColors[[as.character(tmp$Score)]])
+  })
   
   output$targetInfo <- renderInfoBox({
-    infoBox("Selected Target", value=selectedGene(), color = 'green')
+    geneName <- selectedGene()
+    geneList <- ddiData %>% filter(GENE_SYMBOL == geneName)
+    ens <- paste(geneList$ensembl.gene, collapse=",")
+    
+    infoBox("Selected Target", value=HTML(sprintf("%s<br/>%s", geneName, ens)), color = 'green')
   })
   
-  output$status <- renderValueBox({
-    valueBox(subtitle="Votes", value=100, 
-             color = 'red')
-  })
+  output$status <- renderPlot({
+    tmp <- ddiData %>%
+      filter(GENE_SYMBOL == selectedGene()) %>%
+      select(Center, starts_with("status")) %>% 
+      tidyr::gather(key = 'type', value = 'status', starts_with("status")) %>% 
+      mutate(status=factor(status, levels=c("good", "medium", "bad", "unknown")))
+    
+    tmp$type <- forcats::fct_recode(tmp$type, `Known Ligands`="status_known_ligands", 
+                                    `Crystal Structures`="status_crystal_structure", 
+                                    Pocket="status_pocket", Assays="status_assays", 
+                                    `In vivo`="status_in_vivo_work")
+    
+    ggplot(tmp, aes(x=type, y=Center)) + 
+      facet_grid(Center ~ type, scales="free") +
+      geom_tile(aes(fill=status)) + 
+      scale_fill_manual(values=oddiStatusColors) + 
+      theme_bw() + 
+      theme(axis.text=element_blank(), axis.title=element_blank(),
+            axis.ticks=element_blank(), strip.text.y=element_text(angle=360),
+            strip.background=element_rect(fill="white"),
+            legend.position="bottom")
+  }, height=)
   
   output$video <- renderUI({
     tags$iframe(src=vids[1], height=300, width=534)

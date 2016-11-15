@@ -4,8 +4,13 @@ library(mygene)
 library(plyr)
 library(dplyr)
 library(igraph)
+library(forcats)
+library(ggplot2)
 
 synapseLogin()
+
+oddiStatusColors <- c("good"="#5e933f", "medium"="#ef7d0b", "bad"="#a30b0d", "unknown"="#a3a3a3")
+lillyStatusColors <- c("3"="green", "2"="yellow", "1"="orange", "0"="red")
 
 vids <- c("https://www.youtube.com/embed/gc3Kd4ez1iY",
           "https://www.youtube.com/embed/JHCMnr1bU2Q",
@@ -15,12 +20,16 @@ vids <- c("https://www.youtube.com/embed/gc3Kd4ez1iY",
 )
 
 ddiData <- fread(getFileLocation(synGet("syn7537835")), 
-                 data.table=FALSE)
+                 data.table=FALSE) %>% 
+  mutate(status_assays=fct_recode(status_assays, unknown=""),
+         status_crystal_structure=fct_recode(status_crystal_structure, unknown=""),
+         status_pocket=fct_recode(status_pocket, unknown=""),
+         status_in_vivo_work=fct_recode(status_in_vivo_work, unknown=""),
+         status_known_ligands=fct_recode(status_known_ligands, unknown="")
+  )
 
 lillyData <- fread(getFileLocation(synGet('syn7525109')),
                    data.table=FALSE)
-
-geneTargetList <- sort(unique(c(ddiData$GENE_SYMBOL, lillyData$GENE_SYMBOL)))
 
 out <- queryMany(unique(c(ddiData$GENE_SYMBOL, lillyData$GENE_SYMBOL)),
                         scopes="symbol", fields="ensembl.gene", species="human",
