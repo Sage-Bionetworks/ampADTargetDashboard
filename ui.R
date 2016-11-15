@@ -23,22 +23,23 @@ dashboardPage(
   dashboardBody(
     tabItems(
       tabItem(tabName = "targetmanifest",
-              dataTableOutput('targetlist'),
+              DT::dataTableOutput('targetlist'),
               actionButton('getdetails', 'Get Target Details')),
       tabItem(tabName = "targetdetails",
               
               # Boxes need to be put in a row (or column)
               fluidRow(
+                       infoBoxOutput('targetInfo', width = 6),
+                       box(title="ODDI Druggability", height=200,
+                           plotOutput("status", height=150))),
+              fluidRow(
                 column(width=6,
-                       # box(width=NULL, selectInput("gene", "Gene", choices=geneTargetList)),
-                       infoBoxOutput('targetInfo', width = NULL),
-                       valueBoxOutput("status", width=NULL),
                        box(title="Nomination Video", solidHeader = TRUE, status="info", 
-                           width=NULL, htmlOutput('video'))
-                ),
+                           width=NULL, htmlOutput('video'))),
                 column(width=6,
-                       box(width=NULL, visNetworkOutput("network", height = "350px")),
-                       DT::dataTableOutput('edgeTable')
+                       box(title="Lilly DrugEBIlity", solidHeader = TRUE, status="info", 
+                           width=NULL, valueBoxOutput('lilly')),
+                       box(width=NULL, visNetworkOutput("network", height = "350px"))
                 )
               )
       )
