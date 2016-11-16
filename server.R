@@ -41,6 +41,21 @@ shinyServer(function(input, output, session) {
       toVisNetworkData()
     foo
   })
+
+  output$gtex <- renderPlot({
+    
+    fpkmGenes <- filter(ddiData, GENE_SYMBOL == selectedGene())$ensembl.gene
+    
+    tmp <- gtex %>% dplyr::filter(ensembl.gene %in% fpkmGenes)
+    
+    p <- ggplot(tmp, aes(x=tissue, y=medianFPKM))
+    p <- p + geom_col(aes(fill=tissue))
+    p <- p + theme_bw()
+    p <- p + theme(axis.text.x=element_text(angle=270, vjust = 0),
+                   legend.position = "none", 
+                   axis.title.x=element_blank())
+    p
+  })
   
   output$expression <- renderPlot({
     
