@@ -8,6 +8,7 @@
 library(shiny)
 library(visNetwork)
 library(igraph)
+library(wesanderson)
 
 shinyServer(function(input, output, session) {
 
@@ -83,7 +84,7 @@ shinyServer(function(input, output, session) {
 
     p <- ggplot(tmp, aes(x=hgnc_symbol, y=fpkm))
     p <- p + geom_boxplot(aes(fill=cogdx))
-    p <- p + scale_fill_manual(values=c("1"="blue", "4"="orange"))
+    p <- p + scale_fill_manual(values=wes_palette("Darjeeling2"))
     p <- p + theme_bw()
     p
   })

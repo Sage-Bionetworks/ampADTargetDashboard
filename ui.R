@@ -8,20 +8,34 @@
 library(shinydashboard)
 library(visNetwork)
 
-sidebar <- dashboardSidebar(width = 100,
-  sidebarMenu(id = 'tabs',
-    menuItem("Targets", tabName = "targetmanifest", icon = icon("dashboard")),
-    menuItem("Details", icon = icon("th"), tabName = "targetdetails")
-  )
+sidebar <- dashboardSidebar(width = 125,
+                            sidebarMenu(id = 'tabs',
+                                        menuItem("Overview",
+                                                 tabName = "overview", 
+                                                 icon = icon("user", lib="glyphicon")),
+                                        menuItem("Targets",
+                                                 tabName = "targetmanifest", 
+                                                 icon = icon("list")),
+                                        menuItem("Details",
+                                                 icon = icon("info-sign", lib="glyphicon"),
+                                                 tabName = "targetdetails"),
+                                        menuItem("Feedback", 
+                                                 tabName = "feedback", 
+                                                 icon = icon("flag", lib="glyphicon"))
+                                        
+                            )
 )
 
-dashboardPage(skin = "black",
+dashboardPage(skin = "blue",
   dashboardHeader(title = "AMP-AD Targets"),
   sidebar,
   # body
 
   dashboardBody(
     tabItems(
+      tabItem(tabName = "overview",
+              includeMarkdown("overview.md")
+              ),
       tabItem(tabName = "targetmanifest",
               DT::dataTableOutput('targetlist'),
               actionButton('getdetails', 'Get Target Details')),
@@ -48,7 +62,11 @@ dashboardPage(skin = "black",
                        box(width=NULL, visNetworkOutput("network", height = "350px"))
                 )
               )
+      ),
+      tabItem(tabName = "feedback",
+              includeMarkdown("feedback.md")
       )
+      
     )
   )
 )
