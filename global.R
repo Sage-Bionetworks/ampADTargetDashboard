@@ -39,9 +39,12 @@ res <- as.data.frame(out$response)
 
 # Two genes - CHRH1 (in DDI and Lilly) and MOAP1 (in Lilly) - have multiple
 # matches to some other chromosomes in Ensembl. Get only the first one.
-res <- res %>% mutate(ensembl=laply(ensembl, function(x) ifelse(is.null(x), '', x[[1]][1])))
-res[is.na(res$ensembl.gene), 'ensembl.gene'] <- res[is.na(res$ensembl.gene), 'ensembl']
-res <- res %>% dplyr::select(-ensembl, -X_id)
+res <- res %>% mutate(ensembl.gene=laply(ensembl, 
+                                         function(x) ifelse(is.null(x), 
+                                                            '', x[[1]][1])))
+
+# res[is.na(res$ensembl), 'ensembl.gene'] <- res[is.na(res$ensembl), 'ensembl']
+res <- res %>% dplyr::select(ensembl.gene, query)
 
 ddiData <- ddiData %>% left_join(res, by=c('GENE_SYMBOL'='query'))
 lillyData <- lillyData %>% left_join(res, by=c('GENE_SYMBOL'='query'))
@@ -72,11 +75,18 @@ genesForNetwork <- genesForNetwork %>%
 
 gg <- graph_from_data_frame(network)
 
-geneFPKM <- fread(getFileLocation(synGet("syn5581268")), data.table=FALSE) %>% 
-  filter(ensembl_gene_id %in% c(genesForNetwork$gene, ddiData$ensembl.gene)) 
+geneFPKM <- fread(getFileLocation(synGet("syn5581268")), 
+                  data.table=FALSE) %>% 
+  filter(ensembl_gene_id %in% c(genesForNetwork$gene, 
+                                ddiData$ensembl.gene)) 
 
-geneCovariates <- fread(getFileLocation(synGet("syn5581227")), data.table=FALSE)
+geneCovariates <- fread(getFileLocation(synGet("syn5581227")),
+                        data.table=FALSE) %>% 
+  filter(cogdx %in% c(1, 4)) %>%
+  mutate(cogdx=factor(cogdx, ordered=TRUE))
 
 geneFPKMLong <- geneFPKM %>% 
   tidyr::gather(sample, fpkm, 3:ncol(geneFPKM)) %>% 
-  left_join(geneCovariates %>% select(Sampleid_batch, cogdx), by=c("sample"="Sampleid_batch"))
+  left_join(geneCovariates %>% select(Sampleid_batch, cogdx), 
+            by=c("sample"="Sampleid_batch")) %>% 
+  filter(!is.na(cogdx))

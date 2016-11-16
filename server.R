@@ -58,10 +58,19 @@ shinyServer(function(input, output, session) {
     
     tmp <- geneFPKMLong %>% dplyr::filter(ensembl_gene_id %in% fpkmGenes)
     
+    medianTmp <- tmp %>% group_by(hgnc_symbol) %>% 
+      summarize(median=median(fpkm)) %>% 
+      arrange(median)
     
+    tmp$hgnc_symbol <- factor(tmp$hgnc_symbol, 
+                              levels=medianTmp$hgnc_symbol,
+                              ordered=TRUE)
+
     p <- ggplot(tmp, aes(x=hgnc_symbol, y=fpkm))
-    p <- p + geom_boxplot(aes(fill=factor(cogdx)))
-    p    
+    p <- p + geom_boxplot(aes(fill=cogdx))
+    p <- p + scale_fill_manual(values=c("1"="blue", "4"="orange"))
+    p <- p + theme_bw()
+    p
   })
   
   output$network <- renderVisNetwork({

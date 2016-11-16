@@ -30,13 +30,13 @@ dashboardPage(
               # Boxes need to be put in a row (or column)
               fluidRow(
                        infoBoxOutput('targetInfo', width = 6),
-                       box(title="ODDI Druggability", height=200,
-                           plotOutput("status", height=150))),
+                       box(title="ODDI Druggability", solidHeader=TRUE, status="info", 
+                           height=200, plotOutput("status", height=150))),
               fluidRow(
                 column(width=6,
                        box(title="Nomination Video", solidHeader = TRUE, status="info", 
                            width=NULL, htmlOutput('video')),
-                       box(title="Expression", 
+                       box(title="Expression", solidHeader=TRUE, status="info",
                            width=NULL,
                            plotOutput("expression"))),
                 column(width=6,
