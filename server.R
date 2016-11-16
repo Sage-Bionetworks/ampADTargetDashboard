@@ -17,7 +17,7 @@ shinyServer(function(input, output, session) {
   
   output$targetlist <- DT::renderDataTable(targetManifest %>% rename(`Gene`=GENE_SYMBOL),
                                           options=list(lengthChange=FALSE, 
-                                                       pageLength=15, dom="tp"),
+                                                       pageLength=10, dom="tp"),
                                           selection = list(mode='single', target='row', selected=1),
                                           server = TRUE,
                                           rownames = FALSE)
