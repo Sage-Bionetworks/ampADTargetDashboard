@@ -8,14 +8,14 @@
 library(shinydashboard)
 library(visNetwork)
 
-sidebar <- dashboardSidebar(
+sidebar <- dashboardSidebar(width = 100,
   sidebarMenu(id = 'tabs',
-    menuItem("Target Manifest", tabName = "targetmanifest", icon = icon("dashboard")),
-    menuItem("Target Details", icon = icon("th"), tabName = "targetdetails")
+    menuItem("Targets", tabName = "targetmanifest", icon = icon("dashboard")),
+    menuItem("Details", icon = icon("th"), tabName = "targetdetails")
   )
 )
 
-dashboardPage(
+dashboardPage(skin = "black",
   dashboardHeader(title = "AMP-AD Targets"),
   sidebar,
   # body
