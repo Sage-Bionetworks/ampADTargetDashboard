@@ -71,3 +71,12 @@ genesForNetwork <- genesForNetwork %>%
   mutate(label=ifelse(is.na(symbol), gene, symbol))
 
 gg <- graph_from_data_frame(network)
+
+geneFPKM <- fread(getFileLocation(synGet("syn5581268")), data.table=FALSE) %>% 
+  filter(ensembl_gene_id %in% c(genesForNetwork$gene, ddiData$ensembl.gene)) 
+
+geneCovariates <- fread(getFileLocation(synGet("syn5581227")), data.table=FALSE)
+
+geneFPKMLong <- geneFPKM %>% 
+  tidyr::gather(sample, fpkm, 3:ncol(geneFPKM)) %>% 
+  left_join(geneCovariates %>% select(Sampleid_batch, cogdx), by=c("sample"="Sampleid_batch"))

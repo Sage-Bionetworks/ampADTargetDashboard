@@ -35,7 +35,10 @@ dashboardPage(
               fluidRow(
                 column(width=6,
                        box(title="Nomination Video", solidHeader = TRUE, status="info", 
-                           width=NULL, htmlOutput('video'))),
+                           width=NULL, htmlOutput('video')),
+                       box(title="Expression", 
+                           width=NULL,
+                           plotOutput("expression"))),
                 column(width=6,
                        box(title="Lilly DrugEBIlity", solidHeader = TRUE, status="info", 
                            width=NULL, valueBoxOutput('lilly')),
