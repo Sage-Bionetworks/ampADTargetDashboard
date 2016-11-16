@@ -27,9 +27,7 @@ shinyServer(function(input, output, session) {
   })
   
   edges <- reactive({
-    ensGene <- c(filter(lillyData, GENE_SYMBOL== selectedGene())$ensembl.gene,
-                 filter(ddiData, GENE_SYMBOL== selectedGene())$ensembl.gene)
-
+    ensGene <- filter(ddiData, GENE_SYMBOL== selectedGene())$ensembl.gene
     
     gg.neighbors <- ego(gg, 1, V(gg)[V(gg)$name %in% ensGene])
     
@@ -42,6 +40,37 @@ shinyServer(function(input, output, session) {
     foo <- induced_subgraph(gg, vids = gg.neighbors) %>%
       toVisNetworkData()
     foo
+  })
+  
+  output$expression <- renderPlot({
+    
+    gg2 <- edges()
+
+    if (nrow(gg2$nodes) == 0) {
+      fpkmGenes <- filter(ddiData, GENE_SYMBOL == selectedGene())$ensembl.gene
+    }
+    else {
+      fpkmGenes <- gg2$nodes$id
+    }
+    
+    print(fpkmGenes)
+    validate(need(length(fpkmGenes) <= 50, "Too many related genes to display - maximum is 50."))
+    
+    tmp <- geneFPKMLong %>% dplyr::filter(ensembl_gene_id %in% fpkmGenes)
+    
+    medianTmp <- tmp %>% group_by(hgnc_symbol) %>% 
+      summarize(median=median(fpkm)) %>% 
+      arrange(median)
+    
+    tmp$hgnc_symbol <- factor(tmp$hgnc_symbol, 
+                              levels=medianTmp$hgnc_symbol,
+                              ordered=TRUE)
+
+    p <- ggplot(tmp, aes(x=hgnc_symbol, y=fpkm))
+    p <- p + geom_boxplot(aes(fill=cogdx))
+    p <- p + scale_fill_manual(values=c("1"="blue", "4"="orange"))
+    p <- p + theme_bw()
+    p
   })
   
   output$network <- renderVisNetwork({
@@ -80,8 +109,6 @@ shinyServer(function(input, output, session) {
       filter(GENE_SYMBOL == selectedGene()) %>% 
       select(Score=Lilly_DrugEBIlity_Consensus_Score)
     
-    print(lillyStatusColors[[as.character(tmp$Score)]])
-    
     valueBox("Score",value = tmp$Score, 
              color=lillyStatusColors[[as.character(tmp$Score)]])
   })
@@ -115,7 +142,7 @@ shinyServer(function(input, output, session) {
             axis.ticks=element_blank(), strip.text.y=element_text(angle=360),
             strip.background=element_rect(fill="white"),
             legend.position="bottom")
-  }, height=)
+  })
   
   output$video <- renderUI({
     tags$iframe(src=vids[1], height=300, width=534)
