@@ -133,7 +133,7 @@ shinyServer(function(input, output, session) {
     geneList <- ddiData %>% filter(GENE_SYMBOL == geneName)
     ens <- paste(geneList$ensembl.gene, collapse=",")
     
-    infoBox("Selected Target", value=HTML(sprintf("%s<br/>%s", geneName, ens)), color = 'green')
+    infoBox("Selected Target", value=HTML(sprintf("<a href='http://www.genenames.org/cgi-bin/gene_search?search=%s'>%s</a><br/><a href='ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=%s;'>%s</a>", geneName, geneName, ens, ens)), color = 'green')
   })
   
   output$status <- renderPlot({
@@ -160,7 +160,10 @@ shinyServer(function(input, output, session) {
   })
   
   output$video <- renderUI({
-    tags$iframe(src=vids[1], height=300, width=534)
+    center <- targetManifest[as.numeric(input$targetlist_rows_selected), ]$Center[1]
+    
+    HTML(sprintf('<video height="250" controls><source src="%s" type="video/mp4"></video>', 
+                 vids[[center]]))
   })
   
   
