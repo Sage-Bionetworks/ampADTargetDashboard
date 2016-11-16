@@ -6,6 +6,7 @@ library(dplyr)
 library(igraph)
 library(forcats)
 library(ggplot2)
+library(stringr)
 
 synapseLogin()
 
@@ -90,3 +91,16 @@ geneFPKMLong <- geneFPKM %>%
   left_join(geneCovariates %>% select(Sampleid_batch, cogdx), 
             by=c("sample"="Sampleid_batch")) %>% 
   filter(!is.na(cogdx))
+
+gtexObj <- synGet('syn7542283')
+
+gtex <- fread(getFileLocation(gtexObj), data.table=FALSE) %>% 
+  mutate(ensembl.gene=str_replace(Name, "\\..*", "")) %>% 
+  dplyr::filter(ensembl.gene %in% c(genesForNetwork$gene, 
+                                    ddiData$ensembl.gene)) %>% 
+  select(ensembl.gene, hgnc_symbol=Description, starts_with('Brain'))
+
+gtex <- gtex %>% 
+  tidyr::gather(tissue, medianFPKM, 3:ncol(gtex)) %>% 
+  mutate(tissue=str_replace(tissue, "Brain - ", ""))
+
