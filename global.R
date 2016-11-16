@@ -14,7 +14,7 @@ oddiStatusColors <- c("good"="#5e933f", "medium"="#ef7d0b", "bad"="#a30b0d", "un
 lillyStatusColors <- c("3"="green", "2"="yellow", "1"="orange", "0"="red")
 
 vids <- c("UFL ISB Mayo"="https://s3.amazonaws.com/static.synapse.org/kdaily/AMP-AD/AMP-AD_ExperimentalValidationWGWebinar_092916.mp4",
-          "Rush Broad"="https://s3.amazonaws.com/static.synapse.org/kdaily/AMP-AD/AMP-AD_ExperimentalValidationWGWebinar_101316.mp4",
+          "Broad Rush"="https://s3.amazonaws.com/static.synapse.org/kdaily/AMP-AD/AMP-AD_ExperimentalValidationWGWebinar_101316.mp4",
           "Emory"="https://s3.amazonaws.com/static.synapse.org/kdaily/AMP-AD/AMP-AD_ExperimentalValidationWGWebinar_10616.mp4",
           "Mt Sinai"="https://s3.amazonaws.com/static.synapse.org/kdaily/AMP-AD/AMP-AD_ExperimentalValidationWGWebinar_1473951893.mp4"
 )
@@ -49,9 +49,21 @@ res <- res %>% dplyr::select(ensembl.gene, query)
 ddiData <- ddiData %>% left_join(res, by=c('GENE_SYMBOL'='query'))
 lillyData <- lillyData %>% left_join(res, by=c('GENE_SYMBOL'='query'))
 
+ddiData <- ddiData %>% 
+  select(Center, GENE_SYMBOL, starts_with('status')) %>% 
+  tidyr::gather(category, status, starts_with('status')) %>% 
+  mutate(status_numeric=fct_recode(status, `0`="unknown", `0`='bad',
+                                   `1`="medium", `2`="good"),
+         status_numeric=levels(status_numeric)[as.numeric(status_numeric)]) %>% 
+  select(Center, GENE_SYMBOL, status_numeric) %>% 
+  group_by(Center, GENE_SYMBOL) %>% 
+  summarize(sum_status=sum(as.numeric(status_numeric))) %>% 
+  right_join(ddiData, by=c('Center', 'GENE_SYMBOL'))
+
+
 targetManifest <- ddiData %>%
   arrange(GENE_SYMBOL) %>%
-  select(GENE_SYMBOL, Center, activity_direction)
+  select(GENE_SYMBOL, Center, activity_direction, sum_status)
 
 network <- fread(getFileLocation(synGet("syn7537683")), 
                  data.table=FALSE)
@@ -102,4 +114,3 @@ gtex <- fread(getFileLocation(gtexObj), data.table=FALSE) %>%
 gtex <- gtex %>% 
   tidyr::gather(tissue, medianFPKM, 3:ncol(gtex)) %>% 
   mutate(tissue=str_replace(tissue, "Brain - ", ""))
-
