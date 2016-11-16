@@ -29,22 +29,22 @@ dashboardPage(
               
               # Boxes need to be put in a row (or column)
               fluidRow(
-                       infoBoxOutput('targetInfo', width = 6),
-                       box(title="ODDI Druggability", solidHeader=TRUE, status="info", 
-                           height=200, plotOutput("status", height=150))),
-              fluidRow(
                 column(width=6,
-                       box(title="Expression", solidHeader=TRUE, status="info",
-                           width=NULL,
-                           plotOutput("expression")),
+                       infoBoxOutput('targetInfo', width = NULL),
+                       box(title="ODDI Druggability", solidHeader=TRUE, 
+                           status="info", height=200, width=NULL, 
+                           plotOutput("status", height=150)),
+                       box(title="Lilly DrugEBIlity", solidHeader = TRUE, status="info",
+                           width=NULL, valueBoxOutput('lilly')),
                        box(title="GTEx", solidHeader=TRUE, status="info",
                            width=NULL,
                            plotOutput("gtex")),
                        box(title="Nomination Video", solidHeader = TRUE, status="info", 
                            width=NULL, htmlOutput('video'))),
                 column(width=6,
-                       box(title="Lilly DrugEBIlity", solidHeader = TRUE, status="info", 
-                           width=NULL, valueBoxOutput('lilly')),
+                       box(title="Expression", solidHeader=TRUE,
+                           status="info", width=NULL, 
+                           plotOutput("expression")),
                        box(width=NULL, visNetworkOutput("network", height = "350px"))
                 )
               )
