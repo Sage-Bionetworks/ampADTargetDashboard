@@ -4,6 +4,16 @@
 
 Description of data being shown. Here we'll describe definitions of the columns and sources of data being displayed. This will eventually work it's way into the interface as tooltips and mouseover contextual information.
 
+### Lilly druggability score
+
+Score | Definition
+------|-----------
+0	| Unknown
+1	| Has a closely related gene (“homolog”) with a known protein structure predicted or known to have one or more small-molecule ligand(s)
+2 | Gene with a known protein structure predicted to have a druggable pocket
+3	| Gene known to have 1+ small-molecule ligand(s)
+
+
 ## Data Sources
 
 Description | Location
