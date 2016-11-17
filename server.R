@@ -122,12 +122,21 @@ shinyServer(function(input, output, session) {
   output$edgeTable <- DT::renderDataTable(edges()$edges,
                                           options=list(lengthChange=FALSE, pageLength=5, dom="tp"))
 
-  output$lilly <- renderInfoBox({
+  output$lillyConsensus <- renderInfoBox({
     tmp <- druggabilityData %>% 
       filter(GENE_SYMBOL == selectedGene())
     
-    valueBox("Score",value = tmp$Lilly_DrugEBIlity_Consensus_Score, 
+    valueBox("Consensus", value=tmp$Lilly_DrugEBIlity_Consensus_Score, 
              color=lillyStatusColors[[as.character(tmp$Lilly_DrugEBIlity_Consensus_Score)]])
+  })
+
+  output$lillyStructureBased <- renderInfoBox({
+    tmp <- druggabilityData %>%
+      filter(GENE_SYMBOL == selectedGene())
+
+    valueBox("Structure", value=tmp$`Lilly_GW_Druggability_Structure-based`,
+             color=lillyStatusColors[[as.character(tmp$`Lilly_GW_Druggability_Structure-based`
+)]])
   })
   
   output$targetInfo <- renderInfoBox({

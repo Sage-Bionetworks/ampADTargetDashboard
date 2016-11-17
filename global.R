@@ -11,7 +11,7 @@ library(stringr)
 synapseLogin()
 
 oddiStatusColors <- c("good"="#5e933f", "medium"="#ef7d0b", "bad"="#a30b0d", "unknown"="#a3a3a3")
-lillyStatusColors <- c("3"="green", "2"="yellow", "1"="orange", "0"="red", "unknown"="white")
+lillyStatusColors <- c("3"="green", "2"="yellow", "1"="orange", "0"="red", "NA"="red", "unk"="red")
 
 targetManifsetSketch <- htmltools::withTags(table(
   class = 'display',
@@ -39,7 +39,10 @@ druggabilityData <- fread(getFileLocation(synGet("syn7555804")),
          status_in_vivo_work=fct_recode(status_in_vivo_work, unknown=""),
          status_known_ligands=fct_recode(status_known_ligands, unknown=""),
          Lilly_DrugEBIlity_Consensus_Score=fct_explicit_na(as.character(Lilly_DrugEBIlity_Consensus_Score), 
-                                                           na_level = "unknown")
+                                                           na_level = "unk"),
+         `Lilly_GW_Druggability_Structure-based`=fct_explicit_na(as.character(`Lilly_GW_Druggability_Structure-based`), 
+                                                                 na_level = "unk")
+         
   )
 
 druggabilityData <- druggabilityData %>% 
