@@ -10,16 +10,15 @@ library(visNetwork)
 
 sidebar <- dashboardSidebar(width = 125,
                             sidebarMenu(id = 'tabs',
-                                        menuItem("Overview",
-                                                 tabName = "overview", 
-                                                 icon = icon("user", lib="glyphicon")),
                                         menuItem("Targets",
                                                  tabName = "targetmanifest", 
                                                  icon = icon("list")),
                                         menuItem("Details",
                                                  icon = icon("info-sign", lib="glyphicon"),
                                                  tabName = "targetdetails"),
-                                        menuItem("Feedback", 
+                                        menuItem("Help",
+                                                 tabName = "help", 
+                                                 icon = icon("question-sign", lib="glyphicon")),                                        menuItem("Feedback", 
                                                  tabName = "feedback", 
                                                  icon = icon("flag", lib="glyphicon"))
                                         
@@ -33,10 +32,8 @@ dashboardPage(skin = "blue",
 
   dashboardBody(
     tabItems(
-      tabItem(tabName = "overview",
-              includeMarkdown("overview.md")
-              ),
       tabItem(tabName = "targetmanifest",
+              includeMarkdown('info.md'),
               DT::dataTableOutput('targetlist'),
               actionButton('getdetails', 'Get Target Details')),
       tabItem(tabName = "targetdetails",
@@ -62,6 +59,9 @@ dashboardPage(skin = "blue",
                        box(width=NULL, visNetworkOutput("network", height = "350px"))
                 )
               )
+      ),
+      tabItem(tabName = "help",
+              includeMarkdown("overview.md")
       ),
       tabItem(tabName = "feedback",
               includeMarkdown("feedback.md")

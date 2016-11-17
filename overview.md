@@ -1,7 +1,4 @@
-## Getting Started
-
-1. Click on 'Targets' on the left side of the page to view the list of targets.
-1. Select a target in the list and click the `View Target Details` button to view details.
+# Help
 
 ## Dashboard Display
 
