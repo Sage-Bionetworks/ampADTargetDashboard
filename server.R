@@ -13,10 +13,10 @@ library(wesanderson)
 shinyServer(function(input, output, session) {
 
   selectedGene <- eventReactive(input$getdetails, {
-    targetManifest[as.numeric(input$targetlist_rows_selected), ]$GENE_SYMBOL
+    targetManifest[as.numeric(input$targetlist_rows_selected), ]$Gene
   })
   
-  output$targetlist <- DT::renderDataTable(targetManifest %>% rename(`Gene`=GENE_SYMBOL),
+  output$targetlist <- DT::renderDataTable(targetManifest,
                                           options=list(lengthChange=FALSE, 
                                                        pageLength=10, dom="tp"),
                                           selection = list(mode='single', target='row', selected=1),

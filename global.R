@@ -46,7 +46,7 @@ druggabilityData <- druggabilityData %>%
 
 targetManifest <- druggabilityData %>%
   arrange(GENE_SYMBOL) %>%
-  select(GENE_SYMBOL, Center, activity_direction, 
+  select(Gene=GENE_SYMBOL, Center,
          `ODDI Druggability Score`=sum_status,
          `Lilly DrugEBIlity Consensus`=Lilly_DrugEBIlity_Consensus_Score)
 
