@@ -103,3 +103,5 @@ gtex <- fread(getFileLocation(gtexObj), data.table=FALSE) %>%
 gtex <- gtex %>% 
   tidyr::gather(tissue, medianFPKM, 3:ncol(gtex)) %>% 
   mutate(tissue=str_replace(tissue, "Brain - ", ""))
+
+medianGTEx <- median(gtex$medianFPKM)
