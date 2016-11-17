@@ -21,7 +21,8 @@ shinyServer(function(input, output, session) {
                                                        pageLength=10, dom="tp"),
                                           selection = list(mode='single', target='row', selected=1),
                                           server = TRUE,
-                                          rownames = FALSE)
+                                          rownames = FALSE,
+                                          container=targetManifsetSketch)
   
   observeEvent(input$getdetails, {
     updateTabItems(session, "tabs", selected = "targetdetails")
