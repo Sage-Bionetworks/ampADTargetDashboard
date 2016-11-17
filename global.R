@@ -11,7 +11,7 @@ library(stringr)
 synapseLogin()
 
 oddiStatusColors <- c("good"="#5e933f", "medium"="#ef7d0b", "bad"="#a30b0d", "unknown"="#a3a3a3")
-lillyStatusColors <- c("3"="green", "2"="yellow", "1"="orange", "0"="red")
+lillyStatusColors <- c("3"="green", "2"="yellow", "1"="orange", "0"="red", "unknown"="white")
 
 vids <- c("UFL ISB Mayo"="https://s3.amazonaws.com/static.synapse.org/kdaily/AMP-AD/AMP-AD_ExperimentalValidationWGWebinar_092916.mp4",
           "Broad Rush"="https://s3.amazonaws.com/static.synapse.org/kdaily/AMP-AD/AMP-AD_ExperimentalValidationWGWebinar_101316.mp4",
@@ -26,7 +26,9 @@ druggabilityData <- fread(getFileLocation(synGet("syn7555804")),
          status_crystal_structure=fct_recode(status_crystal_structure, unknown=""),
          status_pocket=fct_recode(status_pocket, unknown=""),
          status_in_vivo_work=fct_recode(status_in_vivo_work, unknown=""),
-         status_known_ligands=fct_recode(status_known_ligands, unknown="")
+         status_known_ligands=fct_recode(status_known_ligands, unknown=""),
+         Lilly_DrugEBIlity_Consensus_Score=fct_explicit_na(as.character(Lilly_DrugEBIlity_Consensus_Score), 
+                                                           na_level = "unknown")
   )
 
 druggabilityData <- druggabilityData %>% 

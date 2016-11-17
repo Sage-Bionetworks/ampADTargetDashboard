@@ -122,12 +122,11 @@ shinyServer(function(input, output, session) {
                                           options=list(lengthChange=FALSE, pageLength=5, dom="tp"))
 
   output$lilly <- renderInfoBox({
-    tmp <- lillyData %>% 
-      filter(GENE_SYMBOL == selectedGene()) %>% 
-      select(Score=Lilly_DrugEBIlity_Consensus_Score)
+    tmp <- druggabilityData %>% 
+      filter(GENE_SYMBOL == selectedGene())
     
-    valueBox("Score",value = tmp$Score, 
-             color=lillyStatusColors[[as.character(tmp$Score)]])
+    valueBox("Score",value = tmp$Lilly_DrugEBIlity_Consensus_Score, 
+             color=lillyStatusColors[[as.character(tmp$Lilly_DrugEBIlity_Consensus_Score)]])
   })
   
   output$targetInfo <- renderInfoBox({
