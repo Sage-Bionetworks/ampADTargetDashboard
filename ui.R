@@ -54,12 +54,13 @@ dashboardPage(skin = "blue",
                            width=NULL,
                            plotOutput("gtex"))),
                 column(width=6,
-                       box(title="Nomination Video", solidHeader = FALSE, 
+                       box(title="Nomination Video", solidHeader = TRUE, 
                            status="info", width=NULL, htmlOutput('video')),
                        box(title="Expression", solidHeader=TRUE,
                            status="info", width=NULL, 
                            plotOutput("expression")),
-                       box(width=NULL, visNetworkOutput("network", height = "350px"))
+                       box(title="Gene network", solidHeader=TRUE, 
+                           status="info", width=NULL, visNetworkOutput("network", height = "350px"))
                 )
               )
       ),
