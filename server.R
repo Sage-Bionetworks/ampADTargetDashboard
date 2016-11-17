@@ -28,7 +28,7 @@ shinyServer(function(input, output, session) {
   })
   
   edges <- reactive({
-    ensGene <- filter(ddiData, GENE_SYMBOL== selectedGene())$ensembl.gene
+    ensGene <- filter(druggabilityData, GENE_SYMBOL== selectedGene())$ensembl.gene
     
     gg.neighbors <- ego(gg, 1, V(gg)[V(gg)$name %in% ensGene])
     
@@ -45,7 +45,7 @@ shinyServer(function(input, output, session) {
 
   output$gtex <- renderPlot({
     
-    fpkmGenes <- filter(ddiData, GENE_SYMBOL == selectedGene())$ensembl.gene
+    fpkmGenes <- filter(druggabilityData, GENE_SYMBOL == selectedGene())$ensembl.gene
     
     tmp <- gtex %>% dplyr::filter(ensembl.gene %in% fpkmGenes)
     
@@ -63,7 +63,7 @@ shinyServer(function(input, output, session) {
     gg2 <- edges()
 
     if (nrow(gg2$nodes) == 0) {
-      fpkmGenes <- filter(ddiData, GENE_SYMBOL == selectedGene())$ensembl.gene
+      fpkmGenes <- filter(druggabilityData, GENE_SYMBOL == selectedGene())$ensembl.gene
     }
     else {
       fpkmGenes <- gg2$nodes$id
@@ -99,7 +99,7 @@ shinyServer(function(input, output, session) {
       select(id) %>% 
       left_join(genesForNetwork, by='id') %>% 
       select(gene, id, label) %>% 
-      dplyr::mutate(group=ifelse(label %in% ddiData$GENE_SYMBOL, "target", "other")) %>% 
+      dplyr::mutate(group=ifelse(label %in% druggabilityData$GENE_SYMBOL, "target", "other")) %>% 
       dplyr::mutate(group=ifelse(label == selectedGene(), "selected", group))
       
     n <- visNetwork(nodes, gg2$edges) %>% 
@@ -131,14 +131,14 @@ shinyServer(function(input, output, session) {
   
   output$targetInfo <- renderInfoBox({
     geneName <- selectedGene()
-    geneList <- ddiData %>% filter(GENE_SYMBOL == geneName)
+    geneList <- druggabilityData %>% filter(GENE_SYMBOL == geneName)
     ens <- paste(geneList$ensembl.gene, collapse=",")
     
     infoBox("Selected Target", value=HTML(sprintf("<a href='http://www.genenames.org/cgi-bin/gene_search?search=%s'>%s</a><br/><a href='ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=%s;'>%s</a>", geneName, geneName, ens, ens)), color = 'green')
   })
   
   output$status <- renderPlot({
-    tmp <- ddiData %>%
+    tmp <- druggabilityData %>%
       filter(GENE_SYMBOL == selectedGene()) %>%
       select(Center, starts_with("status")) %>% 
       tidyr::gather(key = 'type', value = 'status', starts_with("status")) %>% 
