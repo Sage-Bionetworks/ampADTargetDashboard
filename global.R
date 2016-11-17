@@ -19,8 +19,9 @@ vids <- c("UFL ISB Mayo"="https://s3.amazonaws.com/static.synapse.org/kdaily/AMP
           "Mt Sinai"="https://s3.amazonaws.com/static.synapse.org/kdaily/AMP-AD/AMP-AD_ExperimentalValidationWGWebinar_1473951893.mp4"
 )
 
-ddiData <- fread(getFileLocation(synGet("syn7537835")), 
-                 data.table=FALSE) %>% 
+druggabilityData <- fread(getFileLocation(synGet("syn7555804")), 
+                          data.table=FALSE) %>% 
+  rename(ensembl.gene=ENSG) %>% 
   mutate(status_assays=fct_recode(status_assays, unknown=""),
          status_crystal_structure=fct_recode(status_crystal_structure, unknown=""),
          status_pocket=fct_recode(status_pocket, unknown=""),
@@ -28,28 +29,7 @@ ddiData <- fread(getFileLocation(synGet("syn7537835")),
          status_known_ligands=fct_recode(status_known_ligands, unknown="")
   )
 
-lillyData <- fread(getFileLocation(synGet('syn7525109')),
-                   data.table=FALSE)
-
-out <- queryMany(unique(c(ddiData$GENE_SYMBOL, lillyData$GENE_SYMBOL)),
-                        scopes="symbol", fields="ensembl.gene", species="human",
-                 returnall=TRUE, size=1)
-
-res <- as.data.frame(out$response)
-
-# Two genes - CHRH1 (in DDI and Lilly) and MOAP1 (in Lilly) - have multiple
-# matches to some other chromosomes in Ensembl. Get only the first one.
-res <- res %>% mutate(ensembl.gene=laply(ensembl, 
-                                         function(x) ifelse(is.null(x), 
-                                                            '', x[[1]][1])))
-
-# res[is.na(res$ensembl), 'ensembl.gene'] <- res[is.na(res$ensembl), 'ensembl']
-res <- res %>% dplyr::select(ensembl.gene, query)
-
-ddiData <- ddiData %>% left_join(res, by=c('GENE_SYMBOL'='query'))
-lillyData <- lillyData %>% left_join(res, by=c('GENE_SYMBOL'='query'))
-
-ddiData <- ddiData %>% 
+druggabilityData <- druggabilityData %>% 
   select(Center, GENE_SYMBOL, starts_with('status')) %>% 
   tidyr::gather(category, status, starts_with('status')) %>% 
   mutate(status_numeric=fct_recode(status, `0`="unknown", `0`='bad',
@@ -58,12 +38,15 @@ ddiData <- ddiData %>%
   select(Center, GENE_SYMBOL, status_numeric) %>% 
   group_by(Center, GENE_SYMBOL) %>% 
   summarize(sum_status=sum(as.numeric(status_numeric))) %>% 
-  right_join(ddiData, by=c('Center', 'GENE_SYMBOL'))
+  ungroup() %>% 
+  right_join(druggabilityData, by=c('Center', 'GENE_SYMBOL'))
 
 
-targetManifest <- ddiData %>%
+targetManifest <- druggabilityData %>%
   arrange(GENE_SYMBOL) %>%
-  select(GENE_SYMBOL, Center, activity_direction, sum_status)
+  select(GENE_SYMBOL, Center, activity_direction, 
+         `ODDI Druggability Score`=sum_status,
+         `Lilly DrugEBIlity Consensus`=Lilly_DrugEBIlity_Consensus_Score)
 
 network <- fread(getFileLocation(synGet("syn7537683")), 
                  data.table=FALSE)
@@ -90,7 +73,7 @@ gg <- graph_from_data_frame(network)
 # geneFPKM <- fread(getFileLocation(synGet("syn5581268")), 
 #                   data.table=FALSE) %>% 
 #   filter(ensembl_gene_id %in% c(genesForNetwork$gene, 
-#                                 ddiData$ensembl.gene)) 
+#                                 druggabilityData$ensembl.gene)) 
 # 
 # geneCovariates <- fread(getFileLocation(synGet("syn5581227")),
 #                         data.table=FALSE) %>% 
@@ -111,7 +94,7 @@ gtexObj <- synGet('syn7542283')
 gtex <- fread(getFileLocation(gtexObj), data.table=FALSE) %>% 
   mutate(ensembl.gene=str_replace(Name, "\\..*", "")) %>% 
   dplyr::filter(ensembl.gene %in% c(genesForNetwork$gene, 
-                                    ddiData$ensembl.gene)) %>% 
+                                    druggabilityData$ensembl.gene)) %>% 
   select(ensembl.gene, hgnc_symbol=Description, starts_with('Brain'))
 
 gtex <- gtex %>% 
