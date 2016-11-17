@@ -89,6 +89,9 @@ gg <- graph_from_data_frame(network)
 geneFPKMLong <- fread(getFileLocation(synGet("syn7555798")), 
                       data.table=FALSE)
 
+geneFPKMLong$cogdx <- forcats::fct_recode(geneFPKMLong$cogdx, 
+                                          NCI='1', AD='4')
+
 gtexObj <- synGet('syn7542283')
 
 gtex <- fread(getFileLocation(gtexObj), data.table=FALSE) %>% 
