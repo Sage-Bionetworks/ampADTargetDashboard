@@ -132,9 +132,10 @@ shinyServer(function(input, output, session) {
   output$targetInfo <- renderInfoBox({
     geneName <- selectedGene()
     geneList <- druggabilityData %>% filter(GENE_SYMBOL == geneName)
-    ens <- paste(geneList$ensembl.gene, collapse=",")
+    ens <- paste(unique(geneList$ensembl.gene), collapse=",")
     
-    infoBox("Selected Target", value=HTML(sprintf("<a href='http://www.genenames.org/cgi-bin/gene_search?search=%s'>%s</a><br/><a href='ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=%s;'>%s</a>", geneName, geneName, ens, ens)), color = 'green')
+    infoBox("Selected Target", value=HTML(sprintf("<a href='http://www.genenames.org/cgi-bin/gene_search?search=%s'>%s</a><br/><a href='ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=%s;'>%s</a><br/>Nominated by: %s", 
+                                                  geneName, geneName, ens, ens, paste(geneList$Center, collapse=","))), color = 'green')
   })
   
   output$status <- renderPlot({
