@@ -1,14 +1,13 @@
-## Welcome to the AMP-AD Wall of Targets!
+## Getting Started
 
-### Getting Started
+1. Click on 'Targets' on the left side of the page to view the list of targets.
+1. Select a target in the list and click the `View Target Details` button to view details.
 
-Click on 'Targets' on the left side of the page to view the list of targets. Select a target in the list and click the `View Target Details` button to view details.
+## Dashboard Display
 
-### Dashboard Display
+Description of data being shown. Here we'll describe definitions of the columns and sources of data being displayed. This will eventually work it's way into the interface as tooltips and mouseover contextual information.
 
-Description of data being shown.
-
-### Data Sources
+## Data Sources
 
 Description | Location
 ------------|---------
