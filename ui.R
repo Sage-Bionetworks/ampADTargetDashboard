@@ -35,7 +35,7 @@ dashboardPage(skin = "blue",
       tabItem(tabName = "targetmanifest",
               includeMarkdown('info.md'),
               DT::dataTableOutput('targetlist'),
-              actionButton('getdetails', 'Get Target Details')),
+              actionButton('getdetails', 'View Target Details')),
       tabItem(tabName = "targetdetails",
               
               # Boxes need to be put in a row (or column)
