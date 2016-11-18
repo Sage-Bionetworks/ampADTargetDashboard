@@ -8,26 +8,28 @@
 library(shiny)
 library(visNetwork)
 library(igraph)
+library(wesanderson)
 
 shinyServer(function(input, output, session) {
 
   selectedGene <- eventReactive(input$getdetails, {
-    targetManifest[as.numeric(input$targetlist_rows_selected), ]$GENE_SYMBOL
+    targetManifest[as.numeric(input$targetlist_rows_selected), ]$Gene
   })
   
-  output$targetlist <- DT::renderDataTable(targetManifest %>% rename(`Gene`=GENE_SYMBOL),
+  output$targetlist <- DT::renderDataTable(targetManifest,
                                           options=list(lengthChange=FALSE, 
                                                        pageLength=10, dom="tp"),
                                           selection = list(mode='single', target='row', selected=1),
                                           server = TRUE,
-                                          rownames = FALSE)
+                                          rownames = FALSE,
+                                          container=targetManifsetSketch)
   
   observeEvent(input$getdetails, {
     updateTabItems(session, "tabs", selected = "targetdetails")
   })
   
   edges <- reactive({
-    ensGene <- filter(ddiData, GENE_SYMBOL== selectedGene())$ensembl.gene
+    ensGene <- filter(druggabilityData, GENE_SYMBOL== selectedGene())$ensembl.gene
     
     gg.neighbors <- ego(gg, 1, V(gg)[V(gg)$name %in% ensGene])
     
@@ -44,12 +46,13 @@ shinyServer(function(input, output, session) {
 
   output$gtex <- renderPlot({
     
-    fpkmGenes <- filter(ddiData, GENE_SYMBOL == selectedGene())$ensembl.gene
+    fpkmGenes <- filter(druggabilityData, GENE_SYMBOL == selectedGene())$ensembl.gene
     
     tmp <- gtex %>% dplyr::filter(ensembl.gene %in% fpkmGenes)
     
     p <- ggplot(tmp, aes(x=tissue, y=medianFPKM))
     p <- p + geom_col(aes(fill=tissue))
+    p <- p + geom_hline(yintercept = medianGTEx, color='red')
     p <- p + theme_bw()
     p <- p + theme(axis.text.x=element_text(angle=270, vjust = 0),
                    legend.position = "none", 
@@ -62,7 +65,7 @@ shinyServer(function(input, output, session) {
     gg2 <- edges()
 
     if (nrow(gg2$nodes) == 0) {
-      fpkmGenes <- filter(ddiData, GENE_SYMBOL == selectedGene())$ensembl.gene
+      fpkmGenes <- filter(druggabilityData, GENE_SYMBOL == selectedGene())$ensembl.gene
     }
     else {
       fpkmGenes <- gg2$nodes$id
@@ -83,7 +86,7 @@ shinyServer(function(input, output, session) {
 
     p <- ggplot(tmp, aes(x=hgnc_symbol, y=fpkm))
     p <- p + geom_boxplot(aes(fill=cogdx))
-    p <- p + scale_fill_manual(values=c("1"="blue", "4"="orange"))
+    p <- p + scale_fill_manual(values=wes_palette("Chevalier"))
     p <- p + theme_bw()
     p
   })
@@ -98,7 +101,7 @@ shinyServer(function(input, output, session) {
       select(id) %>% 
       left_join(genesForNetwork, by='id') %>% 
       select(gene, id, label) %>% 
-      dplyr::mutate(group=ifelse(label %in% ddiData$GENE_SYMBOL, "target", "other")) %>% 
+      dplyr::mutate(group=ifelse(label %in% druggabilityData$GENE_SYMBOL, "target", "other")) %>% 
       dplyr::mutate(group=ifelse(label == selectedGene(), "selected", group))
       
     n <- visNetwork(nodes, gg2$edges) %>% 
@@ -119,25 +122,34 @@ shinyServer(function(input, output, session) {
   output$edgeTable <- DT::renderDataTable(edges()$edges,
                                           options=list(lengthChange=FALSE, pageLength=5, dom="tp"))
 
-  output$lilly <- renderInfoBox({
-    tmp <- lillyData %>% 
-      filter(GENE_SYMBOL == selectedGene()) %>% 
-      select(Score=Lilly_DrugEBIlity_Consensus_Score)
+  output$lillyConsensus <- renderInfoBox({
+    tmp <- druggabilityData %>% 
+      filter(GENE_SYMBOL == selectedGene())
     
-    valueBox("Score",value = tmp$Score, 
-             color=lillyStatusColors[[as.character(tmp$Score)]])
+    valueBox("Consensus", value=tmp$Lilly_DrugEBIlity_Consensus_Score, 
+             color=lillyStatusColors[[as.character(tmp$Lilly_DrugEBIlity_Consensus_Score)]])
+  })
+
+  output$lillyStructureBased <- renderInfoBox({
+    tmp <- druggabilityData %>%
+      filter(GENE_SYMBOL == selectedGene())
+
+    valueBox("Structure", value=tmp$`Lilly_GW_Druggability_Structure-based`,
+             color=lillyStatusColors[[as.character(tmp$`Lilly_GW_Druggability_Structure-based`
+)]])
   })
   
   output$targetInfo <- renderInfoBox({
     geneName <- selectedGene()
-    geneList <- ddiData %>% filter(GENE_SYMBOL == geneName)
-    ens <- paste(geneList$ensembl.gene, collapse=",")
+    geneList <- druggabilityData %>% filter(GENE_SYMBOL == geneName)
+    ens <- paste(unique(geneList$ensembl.gene), collapse=",")
     
-    infoBox("Selected Target", value=HTML(sprintf("<a href='http://www.genenames.org/cgi-bin/gene_search?search=%s'>%s</a><br/><a href='ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=%s;'>%s</a>", geneName, geneName, ens, ens)), color = 'green')
+    infoBox("Selected Target", value=HTML(sprintf("<a href='http://www.genenames.org/cgi-bin/gene_search?search=%s'>%s</a><br/><a href='ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=%s;'>%s</a><br/>Nominated by: %s", 
+                                                  geneName, geneName, ens, ens, paste(geneList$Center, collapse=","))), color = 'green')
   })
   
   output$status <- renderPlot({
-    tmp <- ddiData %>%
+    tmp <- druggabilityData %>%
       filter(GENE_SYMBOL == selectedGene()) %>%
       select(Center, starts_with("status")) %>% 
       tidyr::gather(key = 'type', value = 'status', starts_with("status")) %>% 
