@@ -17,4 +17,7 @@ colnames(foobar)[1:2] = c('var1','var2')
 write.csv(foobar[,1:2],file='mssmNetwork.csv',quote=F,row.names=F)
 
 bax = File('mssmNetwork.csv',parentId='syn7525089')
-bax = synStore(bax,)
+
+permLink =githubr::getPermlink('Sage-Bionetworks/WallOfTargets','uploadMSSMNetworks.R')
+
+bax = synStore(bax,used = permLink)
