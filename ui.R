@@ -8,23 +8,69 @@
 library(shinydashboard)
 library(visNetwork)
 
-dashboardPage(
+sidebar <- dashboardSidebar(width = 125,
+                            sidebarMenu(id = 'tabs',
+                                        menuItem("Targets",
+                                                 tabName = "targetmanifest", 
+                                                 icon = icon("list")),
+                                        menuItem("Details",
+                                                 icon = icon("info-sign", lib="glyphicon"),
+                                                 tabName = "targetdetails"),
+                                        menuItem("Help",
+                                                 tabName = "help", 
+                                                 icon = icon("question-sign", lib="glyphicon")),                                        menuItem("Feedback", 
+                                                 tabName = "feedback", 
+                                                 icon = icon("flag", lib="glyphicon"))
+                                        
+                            )
+)
+
+dashboardPage(skin = "blue",
   dashboardHeader(title = "AMP-AD Targets"),
-  dashboardSidebar(disable = TRUE),
+  sidebar,
   # body
+
   dashboardBody(
-    # Boxes need to be put in a row (or column)
-    fluidRow(
-      column(width=4,
-             box(width=NULL, selectInput("gene", "Gene", choices=genes$gene)),
-             valueBoxOutput("status", width=NULL),
-             box(title="Nomination Video", solidHeader = TRUE, status="info", 
-                 width=NULL, htmlOutput('video'))
+    tabItems(
+      tabItem(tabName = "targetmanifest",
+              includeMarkdown('info.md'),
+              DT::dataTableOutput('targetlist'),
+              actionButton('getdetails', 'View Target Details')),
+      tabItem(tabName = "targetdetails",
+              
+              # Boxes need to be put in a row (or column)
+              fluidRow(
+                column(width=6,
+                       infoBoxOutput('targetInfo', width = NULL),
+                       box(title="ODDI Druggability", solidHeader=TRUE, 
+                           status="info", height=200, width=NULL, 
+                           plotOutput("status", height=150)),
+                       box(title="Lilly DrugEBIlity", solidHeader = TRUE, status="info",
+                           width=NULL, 
+                           valueBoxOutput('lillyConsensus'),
+                           valueBoxOutput('lillyStructureBased')
+                           ),
+                       box(title="GTEx", solidHeader=TRUE, status="info",
+                           width=NULL,
+                           plotOutput("gtex"))),
+                column(width=6,
+                       box(title="Nomination Video", solidHeader = TRUE, 
+                           status="info", width=NULL, htmlOutput('video')),
+                       box(title="Expression", solidHeader=TRUE,
+                           status="info", width=NULL, 
+                           plotOutput("expression")),
+                       box(title="Gene network", solidHeader=TRUE, 
+                           status="info", width=NULL, visNetworkOutput("network", height = "350px"))
+                )
+              )
       ),
-      column(width=8,
-             box(width=NULL, visNetworkOutput("network", height = "350px")),
-             DT::dataTableOutput('edgeTable')
+      tabItem(tabName = "help",
+              includeMarkdown("overview.md")
+      ),
+      tabItem(tabName = "feedback",
+              includeMarkdown("feedback.md")
       )
+      
     )
   )
 )

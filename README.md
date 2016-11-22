@@ -1,15 +1,28 @@
-# AMP-AD Target Dashboard
+# AMP-AD Wall of Targets
 
-A dashboard of gene target status with nomination videos.
+A R Shiny dashboard of nominated gene targets with information about their genetics, interactions, and druggability.
 
 ## Requirements
 
-- Shiny
-- Some other packages
+- Bioconductor 3.4
+- `shiny`
+- `shinydashboard`
+- `synapseClient`
+- `data.table`
+- `mygene==1.10`
+- `plyr`
+- `dplyr`
+- `igraph`
+- `forcats`
+- `ggplot2`
+- `stringr`
+- `rstudio/DT`
+- `visNetwork`
+- `wesanderson`
 
 ## Run
 
 ```
 library(shiny)
-shiny::runGithub('Sage-Bionetworks/ampADTargetDashboard')
+shiny::runGithub('Sage-Bionetworks/WallOfTargets')
 ```
