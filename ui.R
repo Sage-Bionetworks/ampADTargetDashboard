@@ -56,11 +56,11 @@ dashboardPage(skin = "blue",
                 column(width=6,
                        box(title="Nomination Video", solidHeader = TRUE, 
                            status="info", width=NULL, htmlOutput('video')),
+                       box(title="Gene network", solidHeader=TRUE, 
+                           status="info", width=NULL, visNetworkOutput("network", height = "350px")),
                        box(title="Expression", solidHeader=TRUE,
                            status="info", width=NULL, 
-                           plotOutput("expression")),
-                       box(title="Gene network", solidHeader=TRUE, 
-                           status="info", width=NULL, visNetworkOutput("network", height = "350px"))
+                           plotOutput("expression"))
                 )
               )
       ),
