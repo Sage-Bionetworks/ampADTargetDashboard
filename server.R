@@ -124,7 +124,8 @@ shinyServer(function(input, output, session) {
 
   output$lillyConsensus <- renderInfoBox({
     tmp <- druggabilityData %>% 
-      filter(GENE_SYMBOL == selectedGene())
+      filter(GENE_SYMBOL == selectedGene()) %>% 
+      slice(1)
     
     valueBox("Consensus", value=tmp$Lilly_DrugEBIlity_Consensus_Score, 
              color=lillyStatusColors[[as.character(tmp$Lilly_DrugEBIlity_Consensus_Score)]])
@@ -132,7 +133,8 @@ shinyServer(function(input, output, session) {
 
   output$lillyStructureBased <- renderInfoBox({
     tmp <- druggabilityData %>%
-      filter(GENE_SYMBOL == selectedGene())
+      filter(GENE_SYMBOL == selectedGene()) %>% 
+      slice(1)
 
     valueBox("Structure", value=tmp$`Lilly_GW_Druggability_Structure-based`,
              color=lillyStatusColors[[as.character(tmp$`Lilly_GW_Druggability_Structure-based`
