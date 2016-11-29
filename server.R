@@ -146,7 +146,7 @@ shinyServer(function(input, output, session) {
     geneList <- druggabilityData %>% filter(GENE_SYMBOL == geneName)
     ens <- paste(unique(geneList$ensembl.gene), collapse=",")
     
-    infoBox("Selected Target", value=HTML(sprintf("<a href='http://www.genenames.org/cgi-bin/gene_search?search=%s'>%s</a><br/><a href='ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=%s;'>%s</a><br/>Nominated by: %s", 
+    infoBox("Selected Target", value=HTML(sprintf("<a href='http://www.genenames.org/cgi-bin/gene_search?search=%s' target='_blank'>%s</a><br/><a href='https://ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=%s;' target='_blank'>%s</a><br/>Nominated by: %s", 
                                                   geneName, geneName, ens, ens, paste(geneList$Center, collapse=","))), color = 'green')
   })
   
