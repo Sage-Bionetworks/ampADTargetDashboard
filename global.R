@@ -64,7 +64,7 @@ targetManifest <- druggabilityData %>%
          `ODDI Druggability Score`=sum_status,
          `Lilly DrugEBIlity Consensus`=Lilly_DrugEBIlity_Consensus_Score)
 
-network <- fread(getFileLocation(synGet("syn7537683")), 
+network <- fread(getFileLocation(synGet("syn7770770")), 
                  data.table=FALSE)
 
 genesForNetwork <- network %>%
