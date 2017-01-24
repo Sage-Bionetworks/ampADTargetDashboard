@@ -24,5 +24,5 @@ A R Shiny dashboard of nominated gene targets with information about their genet
 
 ```
 library(shiny)
-shiny::runGithub('Sage-Bionetworks/WallOfTargets')
+shiny::runGitHub('Sage-Bionetworks/WallOfTargets')
 ```
