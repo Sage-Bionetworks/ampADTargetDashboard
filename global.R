@@ -7,8 +7,10 @@ library(igraph)
 library(forcats)
 library(ggplot2)
 library(stringr)
+library(rjson)
 
-synapseLogin()
+config <- rjson::fromJSON(file="key.json")
+synapseLogin(username=config$userName, apiKey = config$apiKey)
 
 oddiStatusColors <- c("good"="#5e933f", "medium"="#ef7d0b", "bad"="#a30b0d", "unknown"="#a3a3a3")
 lillyStatusColors <- c("3"="green", "2"="yellow", "1"="orange", "0"="red", "NA"="red", "unk"="red")
