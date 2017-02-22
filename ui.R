@@ -25,12 +25,21 @@ sidebar <- dashboardSidebar(width = 125,
                             )
 )
 
-dashboardPage(skin = "blue",
+dashboardPage(
+  skin = "blue",
+  
+  
   dashboardHeader(title = "AMP-AD Targets"),
   sidebar,
   # body
 
   dashboardBody(
+    tags$head(
+      singleton(
+        includeScript("www/readCookie.js")
+      )
+    ),
+    
     tabItems(
       tabItem(tabName = "targetmanifest",
               includeMarkdown('info.md'),
