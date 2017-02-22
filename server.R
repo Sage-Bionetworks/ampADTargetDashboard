@@ -48,7 +48,7 @@ shinyServer(function(input, output, session) {
       updateTabItems(session, "tabs", selected = "targetdetails")
     })
     
-    user <- renderText({
+    output$user <- renderText({
       sprintf('Logged in as %s', synGetUserProfile()@userName)
     })
     
