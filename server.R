@@ -12,22 +12,22 @@ library(wesanderson)
 
 shinyServer(function(input, output, session) {
   
-  cookie <- "none"
+  # cookie <- "none"
   
-  if (!interactive()) {
-    session$sendCustomMessage(type="readCookie",
-                              message=list(name='org.sagebionetworks.security.user.login.token'))
-    cookie <- input$cookie
-  }
+  # if (!interactive()) {
+  session$sendCustomMessage(type="readCookie",
+                            message=list(name='org.sagebionetworks.security.user.login.token'))
+  cookie <- input$cookie
+  # }
   
   foo <- observeEvent(cookie, {
     
-    if (!interactive()) {
-      synapseLogin(sessionToken=input$cookie)
-    }
-    else {
-      synapseLogin()
-    }
+    # if (!interactive()) {
+    synapseLogin(sessionToken=input$cookie)
+    # }
+    # else {
+    #   synapseLogin()
+    # }
     
     withProgress(message = 'Loading data...',
                  {source("load.R")})
