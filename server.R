@@ -49,7 +49,7 @@ shinyServer(function(input, output, session) {
     })
     
     output$user <- renderText({
-      sprintf('Logged in as %s', synGetUserProfile()@userName)
+      sprintf('Welcome %s!', synGetUserProfile()@userName)
     })
     
     edges <- reactive({

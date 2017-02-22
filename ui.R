@@ -42,8 +42,8 @@ dashboardPage(
     
     tabItems(
       tabItem(tabName = "targetmanifest",
-              includeMarkdown('info.md'),
               textOutput('user'),
+              includeMarkdown('info.md'),
               DT::dataTableOutput('targetlist'),
               actionButton('getdetails', 'View Target Details')),
       tabItem(tabName = "targetdetails",
