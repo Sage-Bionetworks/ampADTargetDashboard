@@ -17,10 +17,10 @@ shinyServer(function(input, output, session) {
   # if (!interactive()) {
   session$sendCustomMessage(type="readCookie",
                             message=list(name='org.sagebionetworks.security.user.login.token'))
-  cookie <- input$cookie
+  # cookie <- input$cookie
   # }
   
-  foo <- observeEvent(cookie, {
+  foo <- observeEvent(input$cookie, {
     
     # if (!interactive()) {
     synapseLogin(sessionToken=input$cookie)
