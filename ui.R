@@ -25,14 +25,24 @@ sidebar <- dashboardSidebar(width = 125,
                             )
 )
 
-dashboardPage(skin = "blue",
+dashboardPage(
+  skin = "blue",
+  
+  
   dashboardHeader(title = "AMP-AD Targets"),
   sidebar,
   # body
 
   dashboardBody(
+    tags$head(
+      singleton(
+        includeScript("www/readCookie.js")
+      )
+    ),
+    
     tabItems(
       tabItem(tabName = "targetmanifest",
+              textOutput('user'),
               includeMarkdown('info.md'),
               DT::dataTableOutput('targetlist'),
               actionButton('getdetails', 'View Target Details')),
@@ -56,11 +66,11 @@ dashboardPage(skin = "blue",
                 column(width=6,
                        box(title="Nomination Video", solidHeader = TRUE, 
                            status="info", width=NULL, htmlOutput('video')),
+                       box(title="Gene network", solidHeader=TRUE, 
+                           status="info", width=NULL, visNetworkOutput("network", height = "350px")),
                        box(title="Expression", solidHeader=TRUE,
                            status="info", width=NULL, 
-                           plotOutput("expression")),
-                       box(title="Gene network", solidHeader=TRUE, 
-                           status="info", width=NULL, visNetworkOutput("network", height = "350px"))
+                           plotOutput("expression"))
                 )
               )
       ),
