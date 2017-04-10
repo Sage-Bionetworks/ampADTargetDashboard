@@ -1,7 +1,10 @@
-druggabilityData <- fread(getFileLocation(synGet("syn7555804")), 
+druggabilityData <- fread(getFileLocation(synGet("syn7555804", version=1)), 
                           data.table=FALSE) %>% 
   rename(ensembl.gene=ENSG) %>% 
-  mutate(status_assays=fct_recode(status_assays, unknown=""),
+  mutate(Center=fct_recode(Center, `UFL-ISB-Mayo`='UFL ISB Mayo'),
+         Center=fct_recode(Center, `Broad-Rush`='Broad Rush'),
+         Center=fct_recode(Center, MSSM='Mt Sinai'),
+         status_assays=fct_recode(status_assays, unknown=""),
          status_crystal_structure=fct_recode(status_crystal_structure, unknown=""),
          status_pocket=fct_recode(status_pocket, unknown=""),
          status_in_vivo_work=fct_recode(status_in_vivo_work, unknown=""),
@@ -25,6 +28,7 @@ druggabilityData <- druggabilityData %>%
   ungroup() %>% 
   right_join(druggabilityData, by=c('Center', 'GENE_SYMBOL'))
 
+targetList <- synGet("syn8656625") %>% getFileLocation %>% fread(data.table=FALSE)
 
 targetManifest <- druggabilityData %>%
   arrange(GENE_SYMBOL) %>%
