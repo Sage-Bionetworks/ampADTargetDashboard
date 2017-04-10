@@ -1,4 +1,4 @@
-druggabilityData <- fread(getFileLocation(synGet("syn7555804", version=1)), 
+druggabilityData <- fread(getFileLocation(synGet("syn7555804")), 
                           data.table=FALSE) %>% 
   rename(ensembl.gene=ENSG) %>% 
   mutate(Center=fct_recode(Center, `UFL-ISB-Mayo`='UFL ISB Mayo'),
