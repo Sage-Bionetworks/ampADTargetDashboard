@@ -17,24 +17,26 @@ druggabilityData <- fread(getFileLocation(synGet("syn7555804")),
   )
 
 druggabilityData <- druggabilityData %>% 
-  select(Center, GENE_SYMBOL, starts_with('status')) %>% 
+  select(GENE_SYMBOL, starts_with('status')) %>% 
+  distinct() %>% 
   tidyr::gather(category, status, starts_with('status')) %>% 
   mutate(status_numeric=fct_recode(status, `0`="unknown", `0`='bad',
                                    `1`="medium", `2`="good"),
          status_numeric=levels(status_numeric)[as.numeric(status_numeric)]) %>% 
-  select(Center, GENE_SYMBOL, status_numeric) %>% 
-  group_by(Center, GENE_SYMBOL) %>% 
+  select(GENE_SYMBOL, status_numeric) %>% 
+  group_by(GENE_SYMBOL) %>% 
   summarize(sum_status=sum(as.numeric(status_numeric))) %>% 
   ungroup() %>% 
-  right_join(druggabilityData, by=c('Center', 'GENE_SYMBOL'))
-
-targetList <- synGet("syn8656625") %>% getFileLocation %>% fread(data.table=FALSE)
-
-targetManifest <- druggabilityData %>%
+  right_join(druggabilityData, by=c('GENE_SYMBOL')) %>% 
   arrange(GENE_SYMBOL) %>%
-  select(Gene=GENE_SYMBOL, Center,
+  select(Gene=GENE_SYMBOL,
          `ODDI Druggability Score`=sum_status,
-         `Lilly DrugEBIlity Consensus`=Lilly_DrugEBIlity_Consensus_Score)
+         `Lilly DrugEBIlity Consensus`=Lilly_DrugEBIlity_Consensus_Score) 
+
+targetList <- synGet("syn8656625") %>% getFileLocation %>% fread(data.table=FALSE) %>% 
+  select(Center=group, Gene=gene_symbol)
+
+targetManifest <- targetList %>% left_join(druggabilityData)
 
 network <- fread(getFileLocation(synGet("syn7770770")), 
                  data.table=FALSE)
