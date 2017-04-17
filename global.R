@@ -17,14 +17,13 @@ targetManifsetSketch <- htmltools::withTags(table(
   thead(
     tr(
       th('Gene', title = 'The target gene'),
-      th('Center', title = 'The center nominating this target'),
+      # th('Center', title = 'The center nominating this target'),
       th('ODDI Druggability Score', title = 'Sum of individual ODDI Druggability scores'),
       th('Lilly Druggability Consensus', title = 'A consensus score for druggability from Lilly')
     )
   )
 ))
-vids <- c("UFL ISB Mayo"="https://s3.amazonaws.com/static.synapse.org/kdaily/AMP-AD/AMP-AD_ExperimentalValidationWGWebinar_092916.mp4",
-          "Broad Rush"="https://s3.amazonaws.com/static.synapse.org/kdaily/AMP-AD/AMP-AD_ExperimentalValidationWGWebinar_101316.mp4",
+vids <- c("UFL-ISB-Mayo"="https://s3.amazonaws.com/static.synapse.org/kdaily/AMP-AD/AMP-AD_ExperimentalValidationWGWebinar_092916.mp4",
+          "Broad-Rush"="https://s3.amazonaws.com/static.synapse.org/kdaily/AMP-AD/AMP-AD_ExperimentalValidationWGWebinar_101316.mp4",
           "Emory"="https://s3.amazonaws.com/static.synapse.org/kdaily/AMP-AD/AMP-AD_ExperimentalValidationWGWebinar_10616.mp4",
-          "Mt Sinai"="https://s3.amazonaws.com/static.synapse.org/kdaily/AMP-AD/AMP-AD_ExperimentalValidationWGWebinar_1473951893.mp4"
-)
+          "MSSM"="https://s3.amazonaws.com/static.synapse.org/kdaily/AMP-AD/AMP-AD_ExperimentalValidationWGWebinar_1473951893.mp4")
