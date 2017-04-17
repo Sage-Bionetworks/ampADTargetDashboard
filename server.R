@@ -60,6 +60,7 @@ shinyServer(function(input, output, session) {
     output$gtex <- renderPlot({
       
       fpkmGenes <- filter(druggabilityData, GENE_SYMBOL == selectedGene())$ensembl.gene
+      validate(need(length(fpkmGenes) > 0, "No expression data to display."))
       
       tmp <- gtex %>% dplyr::filter(ensembl.gene %in% fpkmGenes)
       
@@ -85,6 +86,7 @@ shinyServer(function(input, output, session) {
       }
       
       print(fpkmGenes)
+      validate(need(length(fpkmGenes) > 0, "No expression data to display."))
       validate(need(length(fpkmGenes) <= 50, "Too many related genes to display - maximum is 50."))
       
       tmp <- geneFPKMLong %>% dplyr::filter(ensembl_gene_id %in% fpkmGenes)
@@ -140,14 +142,21 @@ shinyServer(function(input, output, session) {
         filter(GENE_SYMBOL == selectedGene()) %>% 
         slice(1)
       
-      valueBox("Consensus", value=tmp$Lilly_DrugEBIlity_Consensus_Score, 
-               color=lillyStatusColors[[as.character(tmp$Lilly_DrugEBIlity_Consensus_Score)]])
+      validate(need(nrow(tmp) > 0, "No data to display."))
+      
+      list(valueBox("Consensus", value=tmp$Lilly_DrugEBIlity_Consensus_Score, 
+               color=lillyStatusColors[[as.character(tmp$Lilly_DrugEBIlity_Consensus_Score)]]),
+           valueBox("Structure", value=tmp$`Lilly_GW_Druggability_Structure-based`,
+                    color=lillyStatusColors[[as.character(tmp$`Lilly_GW_Druggability_Structure-based`
+                    )]]))
     })
     
     output$lillyStructureBased <- renderInfoBox({
       tmp <- druggabilityData %>%
         filter(GENE_SYMBOL == selectedGene()) %>% 
         slice(1)
+      
+      validate(need(nrow(tmp) > 0, "No data to display."))
       
       valueBox("Structure", value=tmp$`Lilly_GW_Druggability_Structure-based`,
                color=lillyStatusColors[[as.character(tmp$`Lilly_GW_Druggability_Structure-based`
@@ -156,27 +165,31 @@ shinyServer(function(input, output, session) {
     
     output$targetInfo <- renderInfoBox({
       geneName <- selectedGene()
-      geneList <- druggabilityData %>% filter(GENE_SYMBOL == geneName)
+      geneList <- targetList %>% filter(Gene == geneName)
       ens <- paste(unique(geneList$ensembl.gene), collapse=",")
       
-      infoBox("Selected Target", value=HTML(sprintf("<a href='http://www.genenames.org/cgi-bin/gene_search?search=%s' target='_blank'>%s</a><br/><a href='https://ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=%s;' target='_blank'>%s</a><br/>Nominated by: %s", 
-                                                    geneName, geneName, ens, ens, paste(geneList$Center, collapse=","))), color = 'green')
+      infoBox("Selected Target", value=HTML(sprintf("<a href='http://www.genenames.org/cgi-bin/gene_search?search=%s' target='_blank'>%s</a> (HGNC) <a href='https://www.targetvalidation.org/target/%s' target='_blank'>%s</a> (Open Targets Platform)<br/>Nominated by: %s", 
+                                                    geneName, geneName, ens, ens, paste(geneList$Center, collapse=","))), 
+              icon=icon('info-circle'))
     })
     
     output$status <- renderPlot({
       tmp <- druggabilityData %>%
         filter(GENE_SYMBOL == selectedGene()) %>%
-        select(Center, starts_with("status")) %>% 
+        select(starts_with("status")) %>% 
+        top_n(1) %>% 
         tidyr::gather(key = 'type', value = 'status', starts_with("status")) %>% 
         mutate(status=factor(status, levels=c("good", "medium", "bad", "unknown")))
+      
+      validate(need(nrow(tmp) > 0, "No data to display."))
       
       tmp$type <- forcats::fct_recode(tmp$type, `Known Ligands`="status_known_ligands", 
                                       `Crystal Structures`="status_crystal_structure", 
                                       Pocket="status_pocket", Assays="status_assays", 
                                       `In vivo`="status_in_vivo_work")
-      
+      tmp$Center <- NA
       ggplot(tmp, aes(x=type, y=Center)) + 
-        facet_grid(Center ~ type, scales="free") +
+        facet_wrap( ~ type, scales="free", ncol=5) +
         geom_tile(aes(fill=status)) + 
         scale_fill_manual(values=oddiStatusColors) + 
         theme_bw() + 
@@ -187,10 +200,13 @@ shinyServer(function(input, output, session) {
     })
     
     output$video <- renderUI({
-      center <- targetManifest[as.numeric(input$targetlist_rows_selected), ]$Center[1]
+      geneName <- selectedGene()
+      geneList <- targetList %>% filter(Gene == geneName) %>% select(Center) %>% top_n(1)
+      
+      validate(need(geneList$Center %in% names(vids), sprintf("No video from %s.", geneList$Center)))
       
       HTML(sprintf('<video height="250" controls><source src="%s" type="video/mp4"></video>', 
-                   vids[[center]]))
+                   vids[[geneList$Center]]))
     })
-  })
+  #})
 })
