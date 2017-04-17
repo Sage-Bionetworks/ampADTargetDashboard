@@ -150,7 +150,7 @@ shinyServer(function(input, output, session) {
       
       validate(need(nrow(tmp) > 0, "No data to display."))
       
-      valueBox("Consensus", value=tmp$Lilly_DrugEBIlity_Consensus_Score, 
+      valueBox("Consensus", value=as.character(tmp$Lilly_DrugEBIlity_Consensus_Score), 
                color=lillyStatusColors[[as.character(tmp$Lilly_DrugEBIlity_Consensus_Score)]])
     })
     
@@ -161,7 +161,7 @@ shinyServer(function(input, output, session) {
       
       validate(need(nrow(tmp) > 0, "No data to display."))
       
-      valueBox("Structure", value=tmp$`Lilly_GW_Druggability_Structure-based`,
+      valueBox("Structure", value=as.character(tmp$`Lilly_GW_Druggability_Structure-based`),
                color=lillyStatusColors[[as.character(tmp$`Lilly_GW_Druggability_Structure-based`
                )]])
     })
