@@ -28,7 +28,9 @@ druggabilityData <- druggabilityData %>%
   select(Gene=GENE_SYMBOL,
          ensembl.gene,
          `ODDI Druggability Score`=sum_status,
-         `Lilly DrugEBIlity Consensus`=Lilly_DrugEBIlity_Consensus_Score) 
+         `Lilly DrugEBIlity Consensus`=Lilly_DrugEBIlity_Consensus_Score) %>% 
+  distinct()
+
 
 targetList <- synGet("syn8656625") %>% getFileLocation %>% fread(data.table=FALSE) %>% 
   select(Center=group, Gene=gene_symbol, ensembl.gene=ensembl_id)
