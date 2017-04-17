@@ -8,7 +8,7 @@
 library(shinydashboard)
 library(visNetwork)
 
-sidebar <- dashboardSidebar(width = 125,
+sidebar <- dashboardSidebar(width = 150,
                             sidebarMenu(id = 'tabs',
                                         menuItem("Targets",
                                                  tabName = "targetmanifest", 
@@ -29,7 +29,8 @@ dashboardPage(
   skin = "blue",
   
   
-  dashboardHeader(title = "AMP-AD Targets"),
+  dashboardHeader(title = "AMP-AD Targets",
+                  dropdownMenuOutput("notificationMenu")),
   sidebar,
   # body
 
@@ -42,10 +43,15 @@ dashboardPage(
     
     tabItems(
       tabItem(tabName = "targetmanifest",
-              textOutput('user'),
-              includeMarkdown('info.md'),
-              DT::dataTableOutput('targetlist'),
-              actionButton('getdetails', 'View Target Details')),
+              fluidRow(
+                column(width=2),
+                column(width=8,
+                       includeMarkdown('info.md'),
+                       DT::dataTableOutput('targetlist', width='100%'),
+                       actionButton('getdetails', 'View Target Details')
+                ),
+                column(width=2))
+      ),
       tabItem(tabName = "targetdetails",
               
               # Boxes need to be put in a row (or column)
