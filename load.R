@@ -1,5 +1,6 @@
 druggabilityData <- fread(getFileLocation(synGet("syn7555804")), 
                           data.table=FALSE) %>% 
+  select(-Center, -DDI_Interest, -some_number, -GENE_DESCRIPTION) %>% 
   rename(ensembl.gene=ENSG) %>% 
   mutate(status_assays=fct_recode(status_assays, unknown=""),
          status_crystal_structure=fct_recode(status_crystal_structure, unknown=""),
@@ -24,18 +25,16 @@ druggabilityData <- druggabilityData %>%
   summarize(sum_status=sum(as.numeric(status_numeric))) %>% 
   ungroup() %>% 
   right_join(druggabilityData, by=c('GENE_SYMBOL')) %>% 
-  arrange(GENE_SYMBOL) %>%
-  select(Gene=GENE_SYMBOL,
-         ensembl.gene,
-         `ODDI Druggability Score`=sum_status,
-         `Lilly DrugEBIlity Consensus`=Lilly_DrugEBIlity_Consensus_Score) %>% 
-  distinct()
-
+  arrange(GENE_SYMBOL)
 
 targetList <- synGet("syn8656625") %>% getFileLocation %>% fread(data.table=FALSE) %>% 
   select(Center=group, Gene=gene_symbol, ensembl.gene=ensembl_id)
 
-targetManifest <- targetList %>% left_join(druggabilityData)
+targetManifest <- targetList %>% left_join(druggabilityData, by=c('Gene'='GENE_SYMBOL', 'ensembl.gene'='ensembl.gene')) %>% 
+  select(Gene,
+         `ODDI Druggability Score`=sum_status,
+         `Lilly DrugEBIlity Consensus`=Lilly_DrugEBIlity_Consensus_Score) %>% 
+  distinct()
 
 network <- fread(getFileLocation(synGet("syn7770770")), 
                  data.table=FALSE)
@@ -86,7 +85,7 @@ gtexObj <- synGet('syn7542283')
 gtex <- fread(getFileLocation(gtexObj), data.table=FALSE) %>% 
   mutate(ensembl.gene=str_replace(Name, "\\..*", "")) %>% 
   dplyr::filter(ensembl.gene %in% c(genesForNetwork$gene, 
-                                    druggabilityData$ensembl.gene)) %>% 
+                                    targetList$ensembl.gene)) %>% 
   select(ensembl.gene, hgnc_symbol=Description, starts_with('Brain'))
 
 gtex <- gtex %>% 
