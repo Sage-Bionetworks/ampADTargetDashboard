@@ -27,7 +27,7 @@ shinyServer(function(input, output, session) {
     
     output$targetlist <- DT::renderDataTable(targetManifest,
                                              options=list(lengthChange=FALSE, 
-                                                          pageLength=10, dom="tp"),
+                                                          pageLength=10, dom="ftp"),
                                              selection = list(mode='single', target='row', selected=1),
                                              server = TRUE,
                                              rownames = FALSE,
@@ -37,10 +37,16 @@ shinyServer(function(input, output, session) {
       updateTabItems(session, "tabs", selected = "targetdetails")
     })
     
-    output$user <- renderText({
-      sprintf('Welcome %s!', synGetUserProfile()@userName)
+    output$notificationMenu <- renderMenu({
+      prof <- synGetUserProfile()
+      id <- prof@ownerId
+      name <- prof@userName
+      
+      url <- sprintf("https://www.synapse.org/#!Profile:%s", id)
+      msgs <- list(notificationItem(text=sprintf("Logged in as %s", name),
+                                    icon=icon('user-circle'), status = "info",
+                                    href=url))
     })
-    
     edges <- reactive({
       ensGene <- filter(druggabilityData, GENE_SYMBOL== selectedGene())$ensembl.gene
       
