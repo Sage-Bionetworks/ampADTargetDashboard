@@ -214,5 +214,5 @@ shinyServer(function(input, output, session) {
       HTML(sprintf('<video height="250" controls><source src="%s" type="video/mp4"></video>', 
                    vids[[geneList$Center]]))
     })
-  #})
+  })
 })
