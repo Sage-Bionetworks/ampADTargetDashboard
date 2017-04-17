@@ -71,7 +71,7 @@ shinyServer(function(input, output, session) {
       tmp <- gtex %>% dplyr::filter(ensembl.gene %in% fpkmGenes)
       
       p <- ggplot(tmp, aes(x=tissue, y=medianFPKM))
-      p <- p + geom_col(aes(fill=tissue))
+      p <- p + geom_col(fill="black")
       p <- p + geom_hline(yintercept = medianGTEx, color='red')
       p <- p + theme_bw()
       p <- p + theme(axis.text.x=element_text(angle=270, vjust = 0),
