@@ -47,7 +47,7 @@ genesForNetwork <- network %>%
   dplyr::select(gene) %>% 
   mutate(id=gene) %>% 
   distinct() %>% 
-  arrange(-`ODDI Drugability Score`)
+  arrange(-as.numeric(`ODDI Drugability Score`))
 
 out <- queryMany(unique(genesForNetwork$gene),
                  scopes="ensembl.gene", fields="symbol", species="human",
