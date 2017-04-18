@@ -43,8 +43,8 @@ targetManifest <- targetListDistinct %>%
   left_join(druggabilityData, by=c('Gene'='GENE_SYMBOL',
                                    'ensembl.gene'='ensembl.gene')) %>% 
   select(Gene,
-         nominations,
          Centers,
+         nominations,
          `ODDI Druggability Score`=sum_status,
          `Lilly DrugEBIlity Consensus`=Lilly_DrugEBIlity_Consensus_Score) %>% 
   mutate(`Lilly DrugEBIlity Consensus`=forcats::fct_drop(`Lilly DrugEBIlity Consensus`),
