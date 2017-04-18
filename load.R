@@ -30,14 +30,27 @@ druggabilityData <- druggabilityData %>%
 targetList <- synGet("syn8656625") %>% getFileLocation %>% fread(data.table=FALSE) %>% 
   select(Center=group, Gene=gene_symbol, ensembl.gene=ensembl_id)
 
-targetManifest <- targetList %>% left_join(druggabilityData, by=c('Gene'='GENE_SYMBOL', 'ensembl.gene'='ensembl.gene')) %>% 
+targetListDistinct <- targetList %>% 
+  group_by(Gene, ensembl.gene) %>% 
+  mutate(Centers=paste(Center, collapse=", "), 
+         nominations=length(unique(Center))) %>% 
+  ungroup() %>% 
+  select(-Center) %>% 
+  distinct() %>% 
+  arrange(-nominations) 
+
+targetManifest <- targetListDistinct %>% 
+  left_join(druggabilityData, by=c('Gene'='GENE_SYMBOL',
+                                   'ensembl.gene'='ensembl.gene')) %>% 
   select(Gene,
+         nominations,
+         Centers,
          `ODDI Druggability Score`=sum_status,
          `Lilly DrugEBIlity Consensus`=Lilly_DrugEBIlity_Consensus_Score) %>% 
   mutate(`Lilly DrugEBIlity Consensus`=forcats::fct_drop(`Lilly DrugEBIlity Consensus`),
          `ODDI Druggability Score`=factor(`ODDI Druggability Score`, ordered=TRUE)) %>% 
   distinct() %>% 
-  arrange(-as.numeric(`ODDI Druggability Score`))
+  arrange(-nominations)
 
 network <- fread(getFileLocation(synGet("syn7770770")), 
                  data.table=FALSE)

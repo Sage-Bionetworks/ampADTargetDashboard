@@ -17,7 +17,8 @@ targetManifsetSketch <- htmltools::withTags(table(
   thead(
     tr(
       th('Gene', title = 'The target gene'),
-      # th('Center', title = 'The center nominating this target'),
+      th('Center(s)', title = 'The center(s) nominating this target'),
+      th('Nominations', title= 'Number of centers nominating this target')
       th('ODDI Druggability Score', title = 'Sum of individual ODDI Druggability scores'),
       th('Lilly Druggability Consensus', title = 'A consensus score for druggability from Lilly')
     )
