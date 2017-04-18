@@ -122,7 +122,7 @@ shinyServer(function(input, output, session) {
         select(id) %>% 
         left_join(genesForNetwork, by='id') %>% 
         select(gene, id, label) %>% 
-        dplyr::mutate(group=ifelse(label %in% druggabilityData$GENE_SYMBOL, "target", "other")) %>% 
+        dplyr::mutate(group=ifelse(label %in% targetManifest$Gene, "target", "other")) %>% 
         dplyr::mutate(group=ifelse(label == selectedGene(), "selected", group))
       
       n <- visNetwork(nodes, gg2$edges) %>% 
