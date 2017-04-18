@@ -104,9 +104,9 @@ shinyServer(function(input, output, session) {
       tmp$hgnc_symbol <- factor(tmp$hgnc_symbol, 
                                 levels=medianTmp$hgnc_symbol,
                                 ordered=TRUE)
-      
+      tmp <- tmp %>% rename(`Cognitive Diagnosis`=cogdx)
       p <- ggplot(tmp, aes(x=hgnc_symbol, y=fpkm))
-      p <- p + geom_boxplot(aes(fill=cogdx))
+      p <- p + geom_boxplot(aes(fill=`Cognitive Diagnosis`))
       p <- p + scale_fill_manual(values=wes_palette("Chevalier"))
       p <- p + theme_bw()
       p
@@ -142,28 +142,32 @@ shinyServer(function(input, output, session) {
     
     output$edgeTable <- DT::renderDataTable(edges()$edges,
                                             options=list(lengthChange=FALSE, pageLength=5, dom="tp"))
-    
-    output$lillyConsensus <- renderInfoBox({
-      tmp <- druggabilityData %>% 
-        filter(GENE_SYMBOL == selectedGene()) %>% 
-        slice(1)
-      
-      validate(need(nrow(tmp) > 0, "No data to display."))
-      
-      valueBox("Consensus", value=as.character(tmp$Lilly_DrugEBIlity_Consensus_Score), 
-               color=lillyStatusColors[[as.character(tmp$Lilly_DrugEBIlity_Consensus_Score)]])
-    })
-    
-    output$lillyStructureBased <- renderInfoBox({
+
+    output$lillyDrugability <- renderPlot({
+      selGene <- selectedGene()
       tmp <- druggabilityData %>%
-        filter(GENE_SYMBOL == selectedGene()) %>% 
-        slice(1)
+        filter(GENE_SYMBOL == selGene) %>%
+        select(GENE_SYMBOL, 
+               `Consensus Score`=Lilly_DrugEBIlity_Consensus_Score,
+               `Structure-based Score`=`Lilly_GW_Druggability_Structure-based`) %>% 
+        top_n(1) %>% 
+        tidyr::gather(key = 'type', value = 'score',
+                      c(`Consensus Score`,
+                      `Structure-based Score`)) %>% 
+        mutate(status=factor(status, levels=c("unk", "0", "1", "2", "3")))
       
       validate(need(nrow(tmp) > 0, "No data to display."))
       
-      valueBox("Structure", value=as.character(tmp$`Lilly_GW_Druggability_Structure-based`),
-               color=lillyStatusColors[[as.character(tmp$`Lilly_GW_Druggability_Structure-based`
-               )]])
+      tmp$Center <- NA
+      ggplot(tmp, aes(x=type, y=Center)) + 
+        facet_wrap( ~ type, scales="free", ncol=5) +
+        geom_tile(aes(fill=score)) + 
+        scale_fill_manual(values=lillyStatusColors) + 
+        theme_bw() + 
+        theme(axis.text=element_blank(), axis.title=element_blank(),
+              axis.ticks=element_blank(), strip.text.y=element_text(angle=360),
+              strip.background=element_rect(fill="white"),
+              legend.position="bottom")
     })
     
     output$targetInfo <- renderInfoBox({
