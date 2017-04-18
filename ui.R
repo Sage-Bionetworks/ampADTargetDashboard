@@ -7,6 +7,7 @@
 
 library(shinydashboard)
 library(visNetwork)
+library(shinyBS)
 
 sidebar <- dashboardSidebar(width = 150,
                             sidebarMenu(id = 'tabs',
@@ -18,10 +19,10 @@ sidebar <- dashboardSidebar(width = 150,
                                                  tabName = "targetdetails"),
                                         menuItem("Help",
                                                  tabName = "help", 
-                                                 icon = icon("question-sign", lib="glyphicon")),                                        menuItem("Feedback", 
+                                                 icon = icon("question-sign", lib="glyphicon")),
+                                        menuItem("About", 
                                                  tabName = "feedback", 
                                                  icon = icon("flag", lib="glyphicon"))
-                                        
                             )
 )
 
@@ -48,7 +49,7 @@ dashboardPage(
                 column(width=8,
                        includeMarkdown('info.md'),
                        DT::dataTableOutput('targetlist', width='100%'),
-                       actionButton('getdetails', 'View Target Details')
+                       actionButton('getdetails', 'View')
                 ),
                 column(width=2))
       ),
@@ -58,23 +59,41 @@ dashboardPage(
               fluidRow(
                 column(width=6,
                        infoBoxOutput('targetInfo', width = NULL),
-                       box(title="ODDI Druggability", solidHeader=TRUE, 
+                       box(title=tagList("ODDI Druggability", 
+                                         tipify(icon("question-sign",
+                                                     lib="glyphicon"),
+                                                title="Evidence of target drugability from ODDI.")),
+                           solidHeader=TRUE,
                            status="info", height=200, width=NULL, 
                            plotOutput("status", height=150)),
-                       box(title="Lilly DrugEBIlity", solidHeader = TRUE, status="info",
-                           width=NULL, 
-                           valueBoxOutput('lillyConsensus'),
-                           valueBoxOutput('lillyStructureBased')
-                           ),
-                       box(title="GTEx", solidHeader=TRUE, status="info",
+                       box(title=tagList("Lilly DrugEBIlity",
+                                         tipify(icon("question-sign", 
+                                                     lib="glyphicon"),
+                                                title="Evidence of target drugability from Lilly.")),
+                           solidHeader = TRUE, status="info",
+                           width=NULL, height=200,
+                           plotOutput('lillyDrugability', height=150)
+                       ),
+                       box(title=tagList("GTEx RNASeq Gene Expression",
+                                         tipify(icon("question-sign", lib="glyphicon"), "RNA-Seq median expression values in different brain regions (red line indicates median of all genes)")),
+                                         solidHeader=TRUE, status="info",
                            width=NULL,
                            plotOutput("gtex"))),
                 column(width=6,
-                       box(title="Nomination Video", solidHeader = TRUE, 
+                       box(title=tagList("Nomination Video",
+                                         tipify(icon("question-sign", lib="glyphicon"),
+                                                title="A presentation from the group who nominated the target.")), 
+                           solidHeader = TRUE, 
                            status="info", width=NULL, htmlOutput('video')),
-                       box(title="Gene network", solidHeader=TRUE, 
+                       box(title=tagList("Gene Co-Expression Network",
+                                         tipify(icon("question-sign", lib="glyphicon"), 
+                                                title="Co-expression networks from the ROSMAP study.")),
+                           solidHeader=TRUE, 
                            status="info", width=NULL, visNetworkOutput("network", height = "350px")),
-                       box(title="Expression", solidHeader=TRUE,
+                       box(title=tagList("Case-Control Differential Expression", 
+                                         tipify(icon("question-sign", lib="glyphicon"),
+                                                title="Differential gene expression of target genes between individuals with AD and no cognitive impairment (NCI).")),
+                           solidHeader=TRUE,
                            status="info", width=NULL, 
                            plotOutput("expression"))
                 )

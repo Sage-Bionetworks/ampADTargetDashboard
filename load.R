@@ -36,7 +36,8 @@ targetManifest <- targetList %>% left_join(druggabilityData, by=c('Gene'='GENE_S
          `Lilly DrugEBIlity Consensus`=Lilly_DrugEBIlity_Consensus_Score) %>% 
   mutate(`Lilly DrugEBIlity Consensus`=forcats::fct_drop(`Lilly DrugEBIlity Consensus`),
          `ODDI Druggability Score`=factor(`ODDI Druggability Score`, ordered=TRUE)) %>% 
-  distinct()
+  distinct() %>% 
+  arrange(Gene)
 
 network <- fread(getFileLocation(synGet("syn7770770")), 
                  data.table=FALSE)
