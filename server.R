@@ -154,7 +154,7 @@ shinyServer(function(input, output, session) {
         tidyr::gather(key = 'type', value = 'score',
                       c(`Consensus Score`,
                       `Structure-based Score`)) %>% 
-        mutate(status=factor(status, levels=c("unk", "0", "1", "2", "3")))
+        mutate(score=factor(status, levels=c("unk", "0", "1", "2", "3")))
       
       validate(need(nrow(tmp) > 0, "No data to display."))
       
