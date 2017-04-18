@@ -3,6 +3,7 @@
 - Lara Mangravite
 - Larsson Omberg
 - Ben Logsdon
+- Mette Peters
 - Kenneth Daily
 
 ## Acknowledgements
