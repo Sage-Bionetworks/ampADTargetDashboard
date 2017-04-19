@@ -11,18 +11,23 @@ library(igraph)
 library(wesanderson)
 
 shinyServer(function(input, output, session) {
-  session$sendCustomMessage(type="readCookie",
-                            message=list(name='org.sagebionetworks.security.user.login.token'))
-
-  foo <- observeEvent(input$cookie, {
+  # session$sendCustomMessage(type="readCookie",
+  #                           message=list(name='org.sagebionetworks.security.user.login.token'))
+  # 
+  # foo <- observeEvent(input$cookie, {
+  #   
+  #   synapseLogin(sessionToken=input$cookie)
+    synapseLogin()
     
-    synapseLogin(sessionToken=input$cookie)
-
     withProgress(message = 'Loading data...',
                  {source("load.R")})
     
     selectedGene <- eventReactive(input$getdetails, {
       targetManifest[as.numeric(input$targetlist_rows_selected), ]$Gene
+    })
+    
+    observeEvent(input$targetlist, {
+      updateTabItems(session, "tabs", "targetmanifest")
     })
     
     output$targetlist <- DT::renderDataTable(targetManifest,
@@ -215,5 +220,5 @@ shinyServer(function(input, output, session) {
       HTML(sprintf('<video height="250" controls><source src="%s" type="video/mp4"></video>', 
                    vids[[geneList$Center]]))
     })
-  })
+#   })
 })
