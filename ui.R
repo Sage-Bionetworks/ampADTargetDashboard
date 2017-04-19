@@ -30,7 +30,7 @@ dashboardPage(
   skin = "blue",
   
   
-  dashboardHeader(title = "AMP-AD Targets",
+  dashboardHeader(title = "wall Of Targets",
                   dropdownMenuOutput("notificationMenu")),
   sidebar,
   # body
