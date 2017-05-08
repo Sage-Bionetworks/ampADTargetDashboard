@@ -149,8 +149,16 @@ shinyServer(function(input, output, session) {
 
     output$lillyDrugability <- renderPlot({
       selGene <- selectedGene()
+      
       tmp <- druggabilityData %>%
-        filter(GENE_SYMBOL == selGene) %>%
+        filter(GENE_SYMBOL == selGene)
+      
+      if (nrow(tmp) == 0) {
+        tmp <- data_frame(GENE_SYMBOL=selGene, 
+                          Lilly_DrugEBIlity_Consensus_Score='unk',
+                          `Lilly_GW_Druggability_Structure-based`='unk')
+      }
+      tmp <- tmp %>%
         select(GENE_SYMBOL, 
                `Consensus Score`=Lilly_DrugEBIlity_Consensus_Score,
                `Structure-based Score`=`Lilly_GW_Druggability_Structure-based`) %>% 
