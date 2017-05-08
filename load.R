@@ -68,7 +68,7 @@ genesForNetwork <- genesForNetwork %>%
   left_join(res, by=c('id'='query')) %>% 
   mutate(label=ifelse(is.na(symbol), gene, symbol))
 
-gg <- graph_from_data_frame(network)
+gg <- graph_from_data_frame(network %>% distinct())
 
 # geneFPKM <- fread(getFileLocation(synGet("syn5581268")), 
 #                   data.table=FALSE) %>% 
