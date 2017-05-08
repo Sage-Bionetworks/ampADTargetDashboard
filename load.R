@@ -44,11 +44,7 @@ targetManifest <- targetListDistinct %>%
                                    'ensembl.gene'='ensembl.gene')) %>% 
   select(Gene,
          Centers,
-         nominations,
-         `ODDI Druggability Score`=sum_status,
-         `Lilly DrugEBIlity Consensus`=Lilly_DrugEBIlity_Consensus_Score) %>% 
-  mutate(`Lilly DrugEBIlity Consensus`=forcats::fct_drop(`Lilly DrugEBIlity Consensus`),
-         `ODDI Druggability Score`=factor(`ODDI Druggability Score`, ordered=TRUE)) %>% 
+         nominations) %>% 
   distinct() %>% 
   arrange(-nominations)
 
