@@ -186,7 +186,16 @@ shinyServer(function(input, output, session) {
     
     output$status <- renderPlot({
       tmp <- druggabilityData %>%
-        filter(GENE_SYMBOL == selectedGene()) %>%
+        filter(GENE_SYMBOL == selectedGene())
+      
+      if (nrow(tmp) == 0) {
+        y <- rbind(tmp, rep('unknown', ncol(tmp)))
+        colnames(y) <- colnames(tmp)
+        y$GENE_SYMBOL <- selectedGene()
+        tmp <- y
+      }
+
+      tmp <- tmp %>%
         select(starts_with("status")) %>% 
         top_n(1) %>% 
         tidyr::gather(key = 'type', value = 'status', starts_with("status")) %>% 
