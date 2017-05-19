@@ -179,7 +179,7 @@ shinyServer(function(input, output, session) {
       ggplot(tmp, aes(x=type, y=Center)) + 
         facet_wrap( ~ type, scales="free", ncol=5) +
         geom_tile(aes(fill=score)) + 
-        scale_fill_manual(values=lillyStatusColors) + 
+        scale_fill_manual(values=lillyStatusColors, drop = FALSE) + 
         theme_bw() + 
         theme(axis.text=element_blank(), axis.title=element_blank(),
               axis.ticks=element_blank(), strip.text.y=element_text(angle=360),
@@ -224,7 +224,7 @@ shinyServer(function(input, output, session) {
       ggplot(tmp, aes(x=type, y=Center)) + 
         facet_wrap( ~ type, scales="free", ncol=5) +
         geom_tile(aes(fill=status)) + 
-        scale_fill_manual(values=oddiStatusColors) + 
+        scale_fill_manual(values=oddiStatusColors, drop = FALSE) + 
         theme_bw() + 
         theme(axis.text=element_blank(), axis.title=element_blank(),
               axis.ticks=element_blank(), strip.text.y=element_text(angle=360),
