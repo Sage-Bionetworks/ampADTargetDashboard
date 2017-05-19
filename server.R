@@ -57,19 +57,24 @@ shinyServer(function(input, output, session) {
       gg.neighbors <- ego(gg, 1, V(gg)[V(gg)$name %in% ensGene])
       
       if (length(gg.neighbors) < 1) {
-        gg.neighbors <- c()
+        # gg2 <- make_empty_graph(1)
+        # V(gg2)$name <- ensGene
+        # foo <- gg2
+        foo <- induced_subgraph(gg, vids = c())
       } else {
         gg.neighbors <- gg.neighbors[[1]]
+        foo <- induced_subgraph(gg, vids = gg.neighbors)
       }
       
-      foo <- induced_subgraph(gg, vids = gg.neighbors) %>%
+      foo %>%
         toVisNetworkData()
-      foo
+      
     })
     
     output$gtex <- renderPlot({
       
-      fpkmGenes <- filter(druggabilityData, GENE_SYMBOL == selectedGene())$ensembl.gene
+      fpkmGenes <- filter(gtex, hgnc_symbol == selectedGene())$ensembl.gene
+      message(sprintf('fpkmGenes = %s', fpkmGenes))
       validate(need(length(fpkmGenes) > 0, "No expression data to display."))
       
       tmp <- gtex %>% dplyr::filter(ensembl.gene %in% fpkmGenes)
@@ -119,7 +124,7 @@ shinyServer(function(input, output, session) {
     output$network <- renderVisNetwork({
       
       gg2 <- edges()    
-      validate(need(nrow(gg2$edges) > 0, sprintf("No edges for the gene '%s'.", selectedGene())))
+      validate(need(nrow(gg2$edges) > 0, sprintf("No nodes for the gene '%s'.", selectedGene())))
       validate(need(nrow(gg2$edges) <= 50, sprintf("Network too large (%s edges) for the gene '%s'; maximum number of edges to show is 50.", nrow(edges), selectedGene())))
       
       nodes <- gg2$nodes %>% 
