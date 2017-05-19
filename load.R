@@ -96,8 +96,8 @@ gtexObj <- synGet('syn7542283')
 
 gtex <- fread(getFileLocation(gtexObj), data.table=FALSE) %>% 
   mutate(ensembl.gene=str_replace(Name, "\\..*", "")) %>% 
-  dplyr::filter(ensembl.gene %in% c(genesForNetwork$gene, 
-                                    targetList$ensembl.gene)) %>% 
+  # dplyr::filter(ensembl.gene %in% c(genesForNetwork$gene, 
+  #                                   targetList$ensembl.gene)) %>% 
   select(ensembl.gene, hgnc_symbol=Description, starts_with('Brain'))
 
 gtex <- gtex %>% 
