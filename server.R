@@ -51,6 +51,7 @@ shinyServer(function(input, output, session) {
                                     icon=icon('user-circle'), status = "info",
                                     href=url))
     })
+
     edges <- reactive({
       ensGene <- filter(druggabilityData, GENE_SYMBOL== selectedGene())$ensembl.gene
       
@@ -186,15 +187,19 @@ shinyServer(function(input, output, session) {
               strip.background=element_rect(fill="white"),
               legend.position="bottom")
     })
-    
-    output$targetInfo <- renderInfoBox({
+
+    output$targetInfo <- renderUI({
       geneName <- selectedGene()
+      
+      ensGene <- filter(druggabilityData, GENE_SYMBOL== geneName)$ensembl.gene[1]
+      
       geneList <- targetList %>% filter(Gene == geneName)
       ens <- paste(unique(geneList$ensembl.gene), collapse=",")
       
-      infoBox("Selected Target", value=HTML(sprintf("<a href='http://www.genenames.org/cgi-bin/gene_search?search=%s' target='_blank'>%s</a> (HGNC) <a href='https://www.targetvalidation.org/target/%s' target='_blank'>%s</a> (Open Targets Platform)<br/>Nominated by: %s", 
-                                                    geneName, geneName, ens, ens, paste(geneList$Center, collapse=","))), 
-              icon=icon('info-circle'))
+      res <- mygene::getGene(ensGene, fields = c('name', 'summary'))[[1]]
+      
+      HTML(sprintf("<a href='http://www.genenames.org/cgi-bin/gene_search?search=%s' target='_blank'>%s</a> (%s) <a href='https://www.targetvalidation.org/target/%s' target='_blank'>%s</a> (Open Targets Platform)<br/>Nominated by: %s<br/>Summary: %s", 
+                   geneName, res$name, geneName, ens, ens, paste(geneList$Center, collapse=","), res$summary))
     })
     
     output$status <- renderPlot({
