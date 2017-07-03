@@ -48,10 +48,7 @@ dashboardPage(
                 column(width=2),
                 column(width=8,
                        includeMarkdown('info.md'),
-                       DT::dataTableOutput('targetlist', width='100%'),
-                       actionButton('getdetails', 'View',
-                                    icon("search"), 
-                                    style="color: #fff; background-color: #337ab7; border-color: #2e6da4")
+                       DT::dataTableOutput('targetlist', width='100%')
                 ),
                 column(width=2))
       ),
