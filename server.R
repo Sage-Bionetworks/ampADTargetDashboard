@@ -11,17 +11,17 @@ library(igraph)
 library(wesanderson)
 
 shinyServer(function(input, output, session) {
-  session$sendCustomMessage(type="readCookie",
-                            message=list(name='org.sagebionetworks.security.user.login.token'))
-
-  foo <- observeEvent(input$cookie, {
-
-    synapseLogin(sessionToken=input$cookie)
-    
+  # session$sendCustomMessage(type="readCookie",
+  #                           message=list(name='org.sagebionetworks.security.user.login.token'))
+  # 
+  # foo <- observeEvent(input$cookie, {
+  # 
+  #   synapseLogin(sessionToken=input$cookie)
+    synapseLogin()
     withProgress(message = 'Loading data...',
                  {source("load.R")})
     
-    selectedGene <- eventReactive(input$getdetails, {
+    selectedGene <- eventReactive(input$targetlist_rows_selected, {
       targetManifest[as.numeric(input$targetlist_rows_selected), ]$Gene
     })
     
@@ -32,12 +32,12 @@ shinyServer(function(input, output, session) {
     output$targetlist <- DT::renderDataTable(targetManifest,
                                              options=list(lengthChange=FALSE, 
                                                           pageLength=10, dom="ftp"),
-                                             selection = list(mode='single', target='row', selected=1),
+                                             selection = list(mode='single', target='row'),
                                              server = TRUE,
                                              rownames = FALSE,
                                              container=targetManifsetSketch)
     
-    observeEvent(input$getdetails, {
+    observeEvent(input$targetlist_rows_selected, {
       updateTabItems(session, "tabs", selected = "targetdetails")
     })
     
@@ -241,5 +241,5 @@ shinyServer(function(input, output, session) {
       HTML(sprintf('<video height="250" controls><source src="%s" type="video/mp4"></video>', 
                    vids[[geneList$Center]]))
     })
-   })
+   ## })
 })
