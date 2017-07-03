@@ -31,7 +31,7 @@ shinyServer(function(input, output, session) {
     
     output$targetlist <- DT::renderDataTable(targetManifest,
                                              options=list(lengthChange=FALSE, 
-                                                          pageLength=10, dom="ftp"),
+                                                          pageLength=50, dom="ftp"),
                                              selection = list(mode='single', target='row'),
                                              server = TRUE,
                                              rownames = FALSE,
