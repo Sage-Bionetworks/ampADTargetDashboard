@@ -68,11 +68,21 @@ dashboardPage(
                                          tipify(icon("question-sign", lib="glyphicon"), "Annotations associated with this gene from Gene Ontology")),
                            solidHeader=TRUE, status="primary",
                            width=NULL, collapsible = TRUE, collapsed = FALSE,
-                           htmlOutput('targetInfo')),
-                       box(title=tagList("Gene Ontology annotations",
-                                         tipify(icon("question-sign", lib="glyphicon"), "Annotations associated with this gene from Gene Ontology")),
+                           htmlOutput('targetInfo')
+                       ),
+                       box(title=tagList("Protein information",
+                                         tipify(icon("question-sign", lib="glyphicon"), "Details on the protein product of this gene.")),
                            solidHeader=TRUE, status="primary",
                            width=NULL, collapsible = TRUE, collapsed = TRUE),
+
+                       box(title=tagList("Gene Ontology annotations",
+                                         tipify(icon("question-sign", lib="glyphicon"),
+                                                "Annotations associated with this gene from Gene Ontology")),
+                           solidHeader=TRUE, status="primary",
+                           width=NULL, collapsible = TRUE, collapsed = TRUE,
+                           DT::dataTableOutput('gomf')
+                       ),
+
                        box(title=tagList("Biological pathways",
                                          tipify(icon("question-sign", lib="glyphicon"), "Curated biological pathways that this gene is involved with.")),
                            solidHeader=TRUE, status="primary",
