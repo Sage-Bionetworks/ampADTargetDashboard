@@ -53,6 +53,22 @@ shinyServer(function(input, output, session) {
       #               #              pageLength=50, dom="ftp"),
       #               # rownames = FALSE)
     })
+
+    output$reactome <- DT::renderDataTable({
+      
+      geneName <- selectedGene()
+      ensGene <- filter(druggabilityData, GENE_SYMBOL== geneName)$ensembl.gene[1]
+      
+      res <- mygene::query(ensGene, fields = c('pathway.reactome'))$hits$pathway$reactome[[1]]
+      
+      DT::datatable(res, options = list(lengthChange = FALSE, dom="tp", pageLength=10),
+                    rownames = FALSE)
+      
+      # # DT::datatable(data.frame(a=1, b=2 c=3))#,
+      #               # options=list(lengthChange=FALSE, 
+      #               #              pageLength=50, dom="ftp"),
+      #               # rownames = FALSE)
+    })
     
     observeEvent(input$targetlist_rows_selected, {
       updateTabItems(session, "tabs", selected = "targetdetails")

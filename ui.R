@@ -86,7 +86,8 @@ dashboardPage(
                        box(title=tagList("Biological pathways",
                                          tipify(icon("question-sign", lib="glyphicon"), "Curated biological pathways that this gene is involved with.")),
                            solidHeader=TRUE, status="primary",
-                           width=NULL, collapsible = TRUE, collapsed = TRUE),
+                           width=NULL, collapsible = TRUE, collapsed = TRUE,
+                           DT::dataTableOutput('reactome')),
                        box(title=tagList("Baseline RNA Expression",
                                          tipify(icon("question-sign", lib="glyphicon"), "RNA-Seq median expression values in different brain regions (red line indicates median of all genes)")),
                            solidHeader=TRUE, status="primary",
@@ -119,7 +120,7 @@ dashboardPage(
                            width=NULL, collapsible = TRUE, collapsed = TRUE,
                            plotOutput('lillyDrugability', height=150)
                        ),
-                       box(title=tagList("Nomination Video",
+                       box(title=tagList("Nomination Evidence",
                                          tipify(icon("question-sign", lib="glyphicon"),
                                                 title="A presentation from the group who nominated the target.")), 
                            solidHeader = TRUE, collapsible = TRUE, collapsed = TRUE,
