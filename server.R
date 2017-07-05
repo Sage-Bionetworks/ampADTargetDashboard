@@ -65,10 +65,6 @@ shinyServer(function(input, output, session) {
       DT::datatable(res, options = list(lengthChange = FALSE, dom="tp", pageLength=10),
                     rownames = FALSE)
       
-      # # DT::datatable(data.frame(a=1, b=2 c=3))#,
-      #               # options=list(lengthChange=FALSE, 
-      #               #              pageLength=50, dom="ftp"),
-      #               # rownames = FALSE)
     })
 
     output$evidence <- DT::renderDataTable({
