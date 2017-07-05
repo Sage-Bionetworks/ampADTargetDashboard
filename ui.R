@@ -30,7 +30,7 @@ dashboardPage(
   skin = "blue",
   
   
-  dashboardHeader(title = "wall Of Targets",
+  dashboardHeader(title = "Wall Of Targets",
                   dropdownMenuOutput("notificationMenu")),
   sidebar,
   # body
@@ -71,7 +71,7 @@ dashboardPage(
                                          tipify(icon("question-sign", lib="glyphicon"), "Annotations associated with this gene from Gene Ontology")),
                            solidHeader=TRUE, status="primary",
                            width=NULL, collapsible = TRUE, collapsed = FALSE,
-                           htmlOutput('targetInfo')
+                           uiOutput('targetInfo')
                        ),
                        box(title=tagList("Gene Ontology annotations",
                                          tipify(icon("question-sign", lib="glyphicon"),
@@ -93,6 +93,12 @@ dashboardPage(
                            imageOutput("gtex"),
                            textOutput("gtexText")
                        ),
+                       box(title=tagList("Gene SNPs and structural variants",
+                                         tipify(icon("question-sign",
+                                                     lib="glyphicon"),
+                                                title="SNPs and structural variation affecting the genome region containing the gene.")),
+                           solidHeader=TRUE, collapsible = TRUE, collapsed = TRUE,
+                           status="primary", width=NULL),
                        box(title=tagList("Protein information",
                                          tipify(icon("question-sign", lib="glyphicon"), "Details on the protein product of this gene.")),
                            solidHeader=TRUE, status="primary",
@@ -141,7 +147,12 @@ dashboardPage(
                                                 title="Differential gene expression of target genes between individuals with AD and no cognitive impairment (NCI).")),
                            solidHeader=TRUE, collapsible = TRUE, collapsed = TRUE,
                            status="danger", width=NULL, 
-                           plotOutput("expression"))
+                           plotOutput("expression")),
+                       box(title=tagList("Expression quantitative trait loci (eQTL)", 
+                                         tipify(icon("question-sign", lib="glyphicon"),
+                                                title="eQTL.")),
+                           solidHeader=TRUE, collapsible = TRUE, collapsed = TRUE,
+                           status="danger", width=NULL)
                 )
               )
       ),
