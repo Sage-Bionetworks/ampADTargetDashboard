@@ -268,10 +268,10 @@ shinyServer(function(input, output, session) {
       
       res <- mygene::getGene(ensGene, fields = c('name', 'summary'))[[1]]
       
-      tagList(tags$h3(tags$a(href=sprintf("http://www.genenames.org/cgi-bin/gene_search?search=%s", geneName, target="_blank"), 
-                             geneName),
+      tagList(tags$h3(tags$a(href=sprintf("http://www.genenames.org/cgi-bin/gene_search?search=%s", geneName),
+                             target="blank",geneName),
                       sprintf("(%s)", res$name)),
-              tags$h4(tags$a(href=sprintf('https://www.targetvalidation.org/target/%s', ens), ens, target="_blank"),
+              tags$h4(tags$a(href=sprintf('https://www.targetvalidation.org/target/%s', ens), target="blank", ens),
                       "(Open Targets Platform)"),
               tags$h4(sprintf("Nominated by: %s", paste(geneList$Center, collapse=", "))),
               tags$p(sprintf("Summary: %s", res$summary))
