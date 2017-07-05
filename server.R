@@ -9,9 +9,12 @@ library(shiny)
 library(visNetwork)
 library(igraph)
 library(wesanderson)
+library(shinyjs)
 
 shinyServer(function(input, output, session) {
-  # session$sendCustomMessage(type="readCookie",
+  addClass(selector = "body", class = "sidebar-collapse")
+  
+    # session$sendCustomMessage(type="readCookie",
   #                           message=list(name='org.sagebionetworks.security.user.login.token'))
   # 
   # foo <- observeEvent(input$cookie, {
@@ -21,6 +24,7 @@ shinyServer(function(input, output, session) {
     withProgress(message = 'Loading data...',
                  {source("load.R")})
     
+    
     selectedGene <- eventReactive(input$targetlist_rows_selected, {
       targetManifest[as.numeric(input$targetlist_rows_selected), ]$Gene
     })
@@ -29,10 +33,7 @@ shinyServer(function(input, output, session) {
       updateTabItems(session, "tabs", "targetmanifest")
     })
     
-    output$targetlist <- DT::renderDataTable(targetManifest,
-                                             options=list(lengthChange=FALSE, 
-                                                          pageLength=50, dom="ftp"),
-                                             selection = list(mode='single', target='row'),
+    output$targetlist <- DT::renderDataTable(targetManifestTable,
                                              server = TRUE,
                                              rownames = FALSE,
                                              container=targetManifsetSketch)
@@ -60,6 +61,33 @@ shinyServer(function(input, output, session) {
       ensGene <- filter(druggabilityData, GENE_SYMBOL== geneName)$ensembl.gene[1]
       
       res <- mygene::query(ensGene, fields = c('pathway.reactome'))$hits$pathway$reactome[[1]]
+      
+      DT::datatable(res, options = list(lengthChange = FALSE, dom="tp", pageLength=10),
+                    rownames = FALSE)
+      
+      # # DT::datatable(data.frame(a=1, b=2 c=3))#,
+      #               # options=list(lengthChange=FALSE, 
+      #               #              pageLength=50, dom="ftp"),
+      #               # rownames = FALSE)
+    })
+
+    output$evidence <- DT::renderDataTable({
+      
+      geneName <- selectedGene()
+      
+      res <- targetListOrig %>% filter(gene_symbol == geneName) %>% select(group,rank,evidence)
+      
+      DT::datatable(res, options = list(lengthChange = FALSE, dom="tp", pageLength=10),
+                    rownames = FALSE)
+      
+    })
+
+    output$ISMR <- DT::renderDataTable({
+      
+      geneName <- selectedGene()
+
+      res <- ISMR %>% filter(`Gene Symbol` == geneName) %>% select(-`Gene Symbol`) %>% 
+        dplyr::select(Repository, dplyr::everything())
       
       DT::datatable(res, options = list(lengthChange = FALSE, dom="tp", pageLength=10),
                     rownames = FALSE)
@@ -105,46 +133,59 @@ shinyServer(function(input, output, session) {
       
     })
     
-    output$gtex <- renderPlot({
-      
-      fpkmGenes <- filter(gtex, hgnc_symbol == selectedGene())$ensembl.gene
-      message(sprintf('fpkmGenes = %s', fpkmGenes))
-      validate(need(length(fpkmGenes) > 0, "No expression data to display."))
-      
-      tmp <- gtex %>% dplyr::filter(ensembl.gene %in% fpkmGenes)
-      
-      p <- ggplot(tmp, aes(x=tissue, y=medianFPKM))
-      p <- p + geom_col(fill="black")
-      p <- p + geom_hline(yintercept = medianGTEx, color='red')
-      p <- p + theme_bw()
-      p <- p + theme(axis.text.x=element_text(angle=270, vjust = 0),
-                     legend.position = "none", 
-                     axis.title.x=element_blank())
-      p
-    })
+    # output$gtex <- renderPlot({
+    #   
+    #   fpkmGenes <- filter(gtex, hgnc_symbol == selectedGene())$ensembl.gene
+    #   message(sprintf('fpkmGenes = %s', fpkmGenes))
+    #   validate(need(length(fpkmGenes) > 0, "No expression data to display."))
+    #   
+    #   tmp <- gtex %>% dplyr::filter(ensembl.gene %in% fpkmGenes)
+    #   
+    #   p <- ggplot(tmp, aes(x=tissue, y=medianFPKM))
+    #   p <- p + geom_col(fill="black")
+    #   p <- p + geom_hline(yintercept = medianGTEx, color='red')
+    #   p <- p + theme_bw()
+    #   p <- p + theme(axis.text.x=element_text(angle=270, vjust = 0),
+    #                  legend.position = "none", 
+    #                  axis.title.x=element_blank())
+    #   p
+    # })
+
+    output$gtex <- renderImage({
+        # When input$n is 3, filename is ./images/image3.jpeg
+        filename <- normalizePath(file.path('./gxa_static.png'))
+        
+        # Return a list containing the filename and alt text
+        list(src = filename,
+             height = 400,
+             alt = 'GXA Static Image')
+        
+      }, deleteFile = FALSE)    
+    
+    output$gtexText <- renderText({"See more expression data at Expression Atlas. This expression view is provided by Expression Atlas. Please send any queries or feedback to arrayexpress-atlas@ebi.ac.uk."})
     
     output$expression <- renderPlot({
-      
+
       gg2 <- edges()
-      
+
       if (nrow(gg2$nodes) == 0) {
         fpkmGenes <- filter(druggabilityData, GENE_SYMBOL == selectedGene())$ensembl.gene
       }
       else {
         fpkmGenes <- gg2$nodes$id
       }
-      
+
       print(fpkmGenes)
       validate(need(length(fpkmGenes) > 0, "No expression data to display."))
       validate(need(length(fpkmGenes) <= 50, "Too many related genes to display - maximum is 50."))
-      
+
       tmp <- geneFPKMLong %>% dplyr::filter(ensembl_gene_id %in% fpkmGenes)
-      
-      medianTmp <- tmp %>% group_by(hgnc_symbol) %>% 
-        summarize(median=median(fpkm)) %>% 
+
+      medianTmp <- tmp %>% group_by(hgnc_symbol) %>%
+        summarize(median=median(fpkm)) %>%
         arrange(median)
-      
-      tmp$hgnc_symbol <- factor(tmp$hgnc_symbol, 
+
+      tmp$hgnc_symbol <- factor(tmp$hgnc_symbol,
                                 levels=medianTmp$hgnc_symbol,
                                 ordered=TRUE)
       tmp <- tmp %>% rename(`Cognitive Diagnosis`=cogdx)
@@ -231,18 +272,20 @@ shinyServer(function(input, output, session) {
       
       res <- mygene::getGene(ensGene, fields = c('name', 'summary'))[[1]]
       
-      HTML(sprintf("<a href='http://www.genenames.org/cgi-bin/gene_search?search=%s' target='_blank'>%s</a> (%s) <a href='https://www.targetvalidation.org/target/%s' target='_blank'>%s</a> (Open Targets Platform)<br/>Nominated by: %s<br/>Summary: %s<br/>", 
-                   geneName, res$name, geneName, ens, ens, paste(geneList$Center, collapse=","), res$summary))
+      HTML(sprintf("<h3><a href='http://www.genenames.org/cgi-bin/gene_search?search=%s' target='_blank'>%s</a> (%s) <a href='https://www.targetvalidation.org/target/%s' target='_blank'>%s</a> (Open Targets Platform)</h3><h4>Nominated by: %s</h4><p>Summary: %s</p>", 
+                   geneName, geneName, res$name, ens, ens, paste(geneList$Center, collapse=","), res$summary))
     })
     
     output$status <- renderPlot({
+      
+      geneName <- selectedGene()
       tmp <- druggabilityData %>%
-        filter(GENE_SYMBOL == selectedGene())
+        filter(GENE_SYMBOL == geneName)
       
       if (nrow(tmp) == 0) {
         y <- rbind(tmp, rep('unknown', ncol(tmp)))
         colnames(y) <- colnames(tmp)
-        y$GENE_SYMBOL <- selectedGene()
+        y$GENE_SYMBOL <- geneName
         tmp <- y
       }
 
@@ -250,7 +293,7 @@ shinyServer(function(input, output, session) {
         select(starts_with("status")) %>% 
         top_n(1) %>% 
         tidyr::gather(key = 'type', value = 'status', starts_with("status")) %>% 
-        mutate(status=factor(status, levels=c("good", "medium", "bad", "unknown")))
+        mutate(status=factor(status, levels=c("good", "medium", "bad", "unknown"), ordered=TRUE))
       
       validate(need(nrow(tmp) > 0, "No data to display."))
       
@@ -275,9 +318,12 @@ shinyServer(function(input, output, session) {
       geneList <- targetList %>% filter(Gene == geneName) %>% select(Center) %>% top_n(1)
       
       validate(need(geneList$Center %in% names(vids), sprintf("No video from %s.", geneList$Center)))
-      
-      HTML(sprintf('<video height="250" controls><source src="%s" type="video/mp4"></video>', 
+
+      HTML(sprintf('<a href="%s">Video</a>', 
                    vids[[geneList$Center]]))
+      
+      # HTML(sprintf('<video height="250" controls><source src="%s" type="video/mp4"></video>', 
+      #              vids[[geneList$Center]]))
     })
    ## })
 })

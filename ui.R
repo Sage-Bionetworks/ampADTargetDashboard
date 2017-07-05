@@ -36,6 +36,9 @@ dashboardPage(
   # body
 
   dashboardBody(
+    
+    useShinyjs(),
+    
     tags$head(
       singleton(
         includeScript("www/readCookie.js")
@@ -70,11 +73,6 @@ dashboardPage(
                            width=NULL, collapsible = TRUE, collapsed = FALSE,
                            htmlOutput('targetInfo')
                        ),
-                       box(title=tagList("Protein information",
-                                         tipify(icon("question-sign", lib="glyphicon"), "Details on the protein product of this gene.")),
-                           solidHeader=TRUE, status="primary",
-                           width=NULL, collapsible = TRUE, collapsed = TRUE),
-
                        box(title=tagList("Gene Ontology annotations",
                                          tipify(icon("question-sign", lib="glyphicon"),
                                                 "Annotations associated with this gene from Gene Ontology")),
@@ -82,7 +80,6 @@ dashboardPage(
                            width=NULL, collapsible = TRUE, collapsed = TRUE,
                            DT::dataTableOutput('gomf')
                        ),
-
                        box(title=tagList("Biological pathways",
                                          tipify(icon("question-sign", lib="glyphicon"), "Curated biological pathways that this gene is involved with.")),
                            solidHeader=TRUE, status="primary",
@@ -91,40 +88,49 @@ dashboardPage(
                        box(title=tagList("Baseline RNA Expression",
                                          tipify(icon("question-sign", lib="glyphicon"), "RNA-Seq median expression values in different brain regions (red line indicates median of all genes)")),
                            solidHeader=TRUE, status="primary",
-                           width=NULL, collapsible = TRUE, collapsed = TRUE,
-                           plotOutput("gtex")),
+                           width=NULL, height = NULL, collapsible = TRUE, collapsed = TRUE,
+                           # plotOutput("gtex"),
+                           imageOutput("gtex"),
+                           textOutput("gtexText")
+                       ),
+                       box(title=tagList("Protein information",
+                                         tipify(icon("question-sign", lib="glyphicon"), "Details on the protein product of this gene.")),
+                           solidHeader=TRUE, status="primary",
+                           width=NULL, collapsible = TRUE, collapsed = TRUE),
                        box(title=tagList("Mouse model systems",
                                          tipify(icon("question-sign",
                                                      lib="glyphicon"),
-                                                title="Availability of mouse model systems for AD.")),
+                                                title="Availability of mouse models for the selected gene from the International Mouse Strain Resource (IMSR).")),
                            solidHeader=TRUE, collapsible = TRUE, collapsed = TRUE,
-                           status="success", width=NULL),
+                           status="success", width=NULL,
+                           DT::dataTableOutput("ISMR")),
                        box(title=tagList("Assays",
                                          tipify(icon("question-sign",
                                                      lib="glyphicon"),
                                                 title="Availability of in vivo or in vitro assays.")),
                            solidHeader=TRUE, collapsible = TRUE, collapsed = TRUE,
                            status="success", width=NULL),
-                       box(title=tagList("ODDI Druggability",
+                       box(title=tagList("Druggability",
                                          tipify(icon("question-sign",
                                                      lib="glyphicon"),
-                                                title="Evidence of target drugability from ODDI.")),
+                                                title="Evidence of target drugability from the Oxford Drug Discovery Institute and Lilly/EBI DrugEBIlity")),
                            solidHeader=TRUE, collapsible = TRUE, collapsed = TRUE,
-                           status="success", width=NULL, 
-                           plotOutput("status", height=150)),
-                       box(title=tagList("Lilly DrugEBIlity",
-                                         tipify(icon("question-sign", 
-                                                     lib="glyphicon"),
-                                                title="Evidence of target drugability from Lilly.")),
-                           solidHeader = TRUE, status="success",
-                           width=NULL, collapsible = TRUE, collapsed = TRUE,
-                           plotOutput('lillyDrugability', height=150)
+                           status="success", width=NULL,
+                           tagList(h3("Oxford Drug Discovery Institute Scores",
+                                      tipify(icon("question-sign",
+                                                  lib="glyphicon"),
+                                             title="Evidence of target drugability from the Oxford Drug Discovery Institute and Lilly/EBI DrugEBIlity"))),
+                           plotOutput("status", height=150, width=450),
+                           h3("Lilly / EBI DrugEBIlity Scores"),
+                           plotOutput('lillyDrugability', height=150, width=300)
                        ),
                        box(title=tagList("Nomination Evidence",
                                          tipify(icon("question-sign", lib="glyphicon"),
                                                 title="A presentation from the group who nominated the target.")), 
                            solidHeader = TRUE, collapsible = TRUE, collapsed = TRUE,
-                           status="danger", width=NULL, htmlOutput('video')),
+                           status="danger", width=NULL, 
+                           DT::dataTableOutput("evidence"),
+                           htmlOutput('video')),
                        box(title=tagList("Gene Co-Expression Network",
                                          tipify(icon("question-sign", lib="glyphicon"), 
                                                 title="Co-expression networks from the ROSMAP study.")),
