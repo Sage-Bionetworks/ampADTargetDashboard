@@ -36,6 +36,23 @@ shinyServer(function(input, output, session) {
                                              server = TRUE,
                                              rownames = FALSE,
                                              container=targetManifsetSketch)
+
+    output$gomf <- DT::renderDataTable({
+      
+      geneName <- selectedGene()
+      ensGene <- filter(druggabilityData, GENE_SYMBOL== geneName)$ensembl.gene[1]
+      
+      res <- mygene::query(ensGene, fields = c('go.MF'))$hits$go$MF[[1]] %>%
+        dplyr::select(id, term, evidence)
+      
+      DT::datatable(res, options = list(lengthChange = FALSE, dom="tp", pageLength=10),
+                    rownames = FALSE)
+      
+      # # DT::datatable(data.frame(a=1, b=2 c=3))#,
+      #               # options=list(lengthChange=FALSE, 
+      #               #              pageLength=50, dom="ftp"),
+      #               # rownames = FALSE)
+    })
     
     observeEvent(input$targetlist_rows_selected, {
       updateTabItems(session, "tabs", selected = "targetdetails")
@@ -198,7 +215,7 @@ shinyServer(function(input, output, session) {
       
       res <- mygene::getGene(ensGene, fields = c('name', 'summary'))[[1]]
       
-      HTML(sprintf("<a href='http://www.genenames.org/cgi-bin/gene_search?search=%s' target='_blank'>%s</a> (%s) <a href='https://www.targetvalidation.org/target/%s' target='_blank'>%s</a> (Open Targets Platform)<br/>Nominated by: %s<br/>Summary: %s", 
+      HTML(sprintf("<a href='http://www.genenames.org/cgi-bin/gene_search?search=%s' target='_blank'>%s</a> (%s) <a href='https://www.targetvalidation.org/target/%s' target='_blank'>%s</a> (Open Targets Platform)<br/>Nominated by: %s<br/>Summary: %s<br/>", 
                    geneName, res$name, geneName, ens, ens, paste(geneList$Center, collapse=","), res$summary))
     })
     
