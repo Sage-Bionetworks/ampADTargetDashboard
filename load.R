@@ -1,4 +1,4 @@
-load("/home/kdaily/src/WallOfTargets/data2load.RData")
+synGet('syn11149956') %>% getFileLocation() %>% load()
 
 # druggabilityData <- fread(getFileLocation(synGet("syn7555804")),
 #                           data.table=FALSE) %>%
