@@ -9,7 +9,6 @@ library(shiny)
 library(visNetwork)
 library(igraph)
 library(wesanderson)
-library(shinyjs)
 
 shinyServer(function(input, output, session) {
   addClass(selector = "body", class = "sidebar-collapse")
@@ -42,7 +41,7 @@ shinyServer(function(input, output, session) {
       ensGene <- filter(druggabilityData, GENE_SYMBOL== geneName)$ensembl.gene[1]
       
       res <- mygene::query(ensGene, fields = c('go.MF'))$hits$go$MF[[1]] %>%
-        dplyr::select(id, term, evidence)
+        dplyr::select(term, id)
       
       DT::datatable(res, options = list(lengthChange = FALSE, dom="tp", pageLength=10),
                     rownames = FALSE)
@@ -58,7 +57,13 @@ shinyServer(function(input, output, session) {
       geneName <- selectedGene()
       ensGene <- filter(druggabilityData, GENE_SYMBOL== geneName)$ensembl.gene[1]
       
-      res <- mygene::query(ensGene, fields = c('pathway.reactome'))$hits$pathway$reactome[[1]]
+      res <- mygene::query(ensGene, fields = c('pathway.reactome'))
+      
+      validate(need(!is.null(res$hits$pathway$reactome), 
+                    "No Reactome pathways found."))
+      
+      res <- res$hits$pathway$reactome[[1]] %>% 
+        select(name, id)
       
       DT::datatable(res, options = list(lengthChange = FALSE, dom="tp", pageLength=10),
                     rownames = FALSE)
@@ -70,7 +75,7 @@ shinyServer(function(input, output, session) {
       geneName <- selectedGene()
       
       res <- targetListOrig %>% filter(gene_symbol == geneName) %>% select(group,rank,evidence)
-      
+
       DT::datatable(res, options = list(lengthChange = FALSE, dom="tp", pageLength=10),
                     rownames = FALSE)
       
