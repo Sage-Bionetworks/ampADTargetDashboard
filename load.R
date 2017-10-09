@@ -65,7 +65,7 @@ targetManifestTable <- targetManifest %>%
                 rownames = FALSE,
                 selection = list(mode='single', target='row')) %>% 
   DT::formatStyle(c('Assays', 'Known ligands', 'In vivo'),
-                  backgroundColor=DT::styleEqual(levels(tmp$status), 
+                  backgroundColor=DT::styleEqual(c("good", "medium", "bad", "unknown"), #levels(tmp$status), 
                                                  c("green", "orange", "red", "grey")))
 
 # network <- fread(getFileLocation(synGet("syn7770770")),
