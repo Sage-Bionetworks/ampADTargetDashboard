@@ -31,7 +31,7 @@ load("/home/kdaily/src/WallOfTargets/data2load.RData")
 #   ungroup() %>%
 #   right_join(druggabilityData, by=c('GENE_SYMBOL')) %>%
 #   arrange(GENE_SYMBOL)
-#  
+# 
 # targetListOrig <- synGet("syn8656625") %>% getFileLocation %>% fread(data.table=FALSE)
 # 
 # targetList <- targetListOrig %>%
@@ -54,20 +54,20 @@ load("/home/kdaily/src/WallOfTargets/data2load.RData")
 #          nominations) %>%
 #   distinct() %>%
 #   arrange(-nominations)
-
-targetManifestTable <- targetManifest %>%
-  left_join(druggabilityData %>% select(Gene=GENE_SYMBOL, 
-                                        Assays=status_assays, 
-                                        `In vivo`=status_in_vivo_work, 
-                                        `Known ligands`=status_known_ligands)) %>% 
-  DT::datatable(options=list(lengthChange=FALSE, 
-                             pageLength=50, dom="ftp"), 
-                rownames = FALSE,
-                selection = list(mode='single', target='row')) %>% 
-  DT::formatStyle(c('Assays', 'Known ligands', 'In vivo'),
-                  backgroundColor=DT::styleEqual(levels(tmp$status), 
-                                                 c("green", "orange", "red", "grey")))
-
+# 
+# targetManifestTable <- targetManifest %>%
+#   left_join(druggabilityData %>% select(Gene=GENE_SYMBOL, 
+#                                         Assays=status_assays, 
+#                                         `In vivo`=status_in_vivo_work, 
+#                                         `Known ligands`=status_known_ligands)) %>% 
+#   DT::datatable(options=list(lengthChange=FALSE, 
+#                              pageLength=50, dom="ftp"), 
+#                 rownames = FALSE,
+#                 selection = list(mode='single', target='row')) %>% 
+#   DT::formatStyle(c('Assays', 'Known ligands', 'In vivo'),
+#                   backgroundColor=DT::styleEqual(c("good", "medium", "bad", "unknown"), 
+#                                                  c("green", "orange", "red", "grey")))
+# 
 # network <- fread(getFileLocation(synGet("syn7770770")),
 #                  data.table=FALSE)
 # 
@@ -126,10 +126,11 @@ targetManifestTable <- targetManifest %>%
 # 
 # medianGTEx <- median(gtex$medianFPKM)
 # 
-# ISMR <- readr::read_csv("/home/kdaily/src/WallOfTargets/ISMR.csv") %>% 
-#   dplyr::select(`Strain ID`, `Strain/Stock`, Repository, `Gene Symbol`, URL) %>% 
+# ISMR <- synGet('syn11149859') %>% getFileLocation() %>% 
+#   readr::read_csv() %>%
+#   dplyr::select(`Strain ID`, `Strain/Stock`, Repository, `Gene Symbol`, URL) %>%
 #   mutate(`Gene Symbol`=toupper(`Gene Symbol`))
 # 
 # nTargets <- targetListOrig %>% count(group)
 # 
-# # save(ISMR, nTargets, network, targetList, targetListOrig, druggabilityData, targetManifest, targetListDistinct, genesForNetwork, gg, geneFPKMLong, gtex, medianGTEx, file="./data2load.RData")
+# save(ISMR, nTargets, network, targetList, targetListOrig, druggabilityData, targetManifest, targetListDistinct, genesForNetwork, gg, geneFPKMLong, gtex, medianGTEx, file="./data2load.RData")
