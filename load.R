@@ -1,4 +1,4 @@
-synGet('syn11149956') %>% getFileLocation() %>% load()
+load(synGet('syn11149956') %>% getFileLocation())
 
 # druggabilityData <- fread(getFileLocation(synGet("syn7555804")),
 #                           data.table=FALSE) %>%
@@ -56,16 +56,17 @@ synGet('syn11149956') %>% getFileLocation() %>% load()
 #   arrange(-nominations)
 # 
 # targetManifestTable <- targetManifest %>%
-#   left_join(druggabilityData %>% select(Gene=GENE_SYMBOL, 
-#                                         Assays=status_assays, 
-#                                         `In vivo`=status_in_vivo_work, 
-#                                         `Known ligands`=status_known_ligands)) %>% 
-#   DT::datatable(options=list(lengthChange=FALSE, 
-#                              pageLength=50, dom="ftp"), 
+#   left_join(druggabilityData %>% select(Gene=GENE_SYMBOL,
+#                                         Assays=status_assays,
+#                                         `In vivo`=status_in_vivo_work,
+#                                         `Known ligands`=status_known_ligands)) %>%
+#   DT::datatable(options=list(lengthChange=FALSE,
+#                              pageLength=50, dom="ftp"),
 #                 rownames = FALSE,
-#                 selection = list(mode='single', target='row')) %>% 
+#                 selection = list(mode='single', target='row'),
+#                 container=targetManifsetSketch) %>%
 #   DT::formatStyle(c('Assays', 'Known ligands', 'In vivo'),
-#                   backgroundColor=DT::styleEqual(c("good", "medium", "bad", "unknown"), 
+#                   backgroundColor=DT::styleEqual(c("good", "medium", "bad", "unknown"),
 #                                                  c("green", "orange", "red", "grey")))
 # 
 # network <- fread(getFileLocation(synGet("syn7770770")),
@@ -126,11 +127,17 @@ synGet('syn11149956') %>% getFileLocation() %>% load()
 # 
 # medianGTEx <- median(gtex$medianFPKM)
 # 
-# ISMR <- synGet('syn11149859') %>% getFileLocation() %>% 
+# ISMR <- synGet('syn11149859') %>% getFileLocation() %>%
 #   readr::read_csv() %>%
 #   dplyr::select(`Strain ID`, `Strain/Stock`, Repository, `Gene Symbol`, URL) %>%
 #   mutate(`Gene Symbol`=toupper(`Gene Symbol`))
 # 
 # nTargets <- targetListOrig %>% count(group)
 # 
-# save(ISMR, nTargets, network, targetList, targetListOrig, druggabilityData, targetManifest, targetListDistinct, genesForNetwork, gg, geneFPKMLong, gtex, medianGTEx, file="./data2load.RData")
+# save(ISMR, nTargets, network, targetList, targetListOrig, druggabilityData,
+#      targetManifest, targetManifestTable, targetListDistinct, genesForNetwork,
+#      gg, geneFPKMLong, gtex, medianGTEx,
+#      file="./data2load.RData")
+# 
+# f <- synStore(File("./data2load.RData", parentId='syn7525089'),
+#               used=c('syn11149859', 'syn7542283', 'syn7770770', 'syn8656625', 'syn7555804'))

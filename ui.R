@@ -37,7 +37,7 @@ dashboardPage(
 
   dashboardBody(
     
-    useShinyjs(),
+    shinyjs::useShinyjs(),
     
     tags$head(
       singleton(

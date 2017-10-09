@@ -34,9 +34,7 @@ shinyServer(function(input, output, session) {
     })
     
     output$targetlist <- DT::renderDataTable(targetManifestTable,
-                                             server = TRUE,
-                                             rownames = FALSE,
-                                             container=targetManifsetSketch)
+                                             server = TRUE)
 
     output$gomf <- DT::renderDataTable({
       
