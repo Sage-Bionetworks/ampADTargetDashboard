@@ -189,7 +189,7 @@ shinyServer(function(input, output, session) {
       tmp$hgnc_symbol <- factor(tmp$hgnc_symbol,
                                 levels=medianTmp$hgnc_symbol,
                                 ordered=TRUE)
-      tmp <- tmp %>% rename(`Cognitive Diagnosis`=cogdx)
+      tmp <- tmp %>% dplyr::rename(`Cognitive Diagnosis`=cogdx)
       p <- ggplot(tmp, aes(x=hgnc_symbol, y=fpkm))
       p <- p + geom_boxplot(aes(fill=`Cognitive Diagnosis`))
       p <- p + scale_fill_manual(values=wes_palette("Chevalier"))
