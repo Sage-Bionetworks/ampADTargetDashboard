@@ -24,12 +24,25 @@ shinyServer(function(input, output, session) {
                  {source("load.R")})
     
     
-    selectedGene <- eventReactive(input$targetlist_rows_selected, {
-      targetManifest[as.numeric(input$targetlist_rows_selected), ]$Gene
+
+    selectedGene <- reactive({
+      if (input$inputgene == "Nominated Target Genes") {
+        gene <- targetManifest[as.numeric(input$targetlist_rows_selected), ]$Gene
+      }
+      else if (input$inputgene == "Gene Search") {
+        input$selectGeneBoxButton
+        gene <- input$inputSelectedGene
+        message(sprintf("Selected gene %s", gene))
+      }
+      return(gene)
     })
     
     observeEvent(input$targetlist, {
       updateTabItems(session, "tabs", "targetmanifest")
+    })
+
+    observeEvent(input$selectGeneBoxButton, {
+      updateTabItems(session, "tabs", "targetdetails")
     })
     
     output$targetlist <- DT::renderDataTable(targetManifestTable,
@@ -319,17 +332,22 @@ shinyServer(function(input, output, session) {
               strip.background=element_rect(fill="white"),
               legend.position="bottom")
     })
+
+    output$selectGeneBox <- renderUI({
+      selectizeInput('inputSelectedGene', label='Gene Symbol', multiple=FALSE, 
+                  choices=unique(geneExprData$hgnc_symbol), selected="VGF",
+                  width="25%")
+    })
     
     output$selectForestPlot <- renderUI({
       selectInput('forestModel', label='Model', multiple=FALSE, 
-                  choices=unique(dForFilter$Model), selected="Diagnosis")
+                  choices=unique(dForFilter$Model), selected="Diagnosis",
+                  width="75%")
     })
     
     output$forest <- renderPlot({
-      input$plotForest
-      
       params <- data.frame(hgnc_symbol=selectedGene(),
-                           model=input$forestModel)
+                           Model=input$forestModel)
       
       dForPlot <- inner_join(geneExprData, params) %>% 
         mutate(study_tissue_sex=paste(Study, Tissue, Sex))
@@ -342,6 +360,7 @@ shinyServer(function(input, output, session) {
       p <- p + theme_minimal()
       p
     }) 
+    
     
     output$video <- renderUI({
       geneName <- selectedGene()

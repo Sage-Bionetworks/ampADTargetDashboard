@@ -55,17 +55,57 @@ load("/home/kdaily/src/WallOfTargets/data2load.RData")
 #   distinct() %>%
 #   arrange(-nominations)
 
+geneExprData <- synGet('syn11180450') %>% 
+  getFileLocation() %>% 
+  read_tsv() %>% 
+  filter(stringr::str_detect(Model, "Diagnosis")) %>% 
+  rename(Sex=Gender) %>% 
+  mutate(Sex=forcats::fct_recode(Sex, Males="MALE", 
+                                 Females="FEMALE", 
+                                 `Males and Females`="ALL"),
+         Model=stringr::str_replace(Model, "\\.", " + "))
+
+# create list of filters
+dForFilter <- geneExprData %>% distinct(Study, Tissue, Model, Sex)
+
+## PLACEHOLDER DATA
+# targetList <- geneExprData %>%
+#   mutate(Center=NA) %>% 
+#   select(Center, Gene=hgnc_symbol, ensembl.gene=ensembl_gene_id) %>% 
+#   distinct()
+#  
+# targetListDistinct <- targetList %>%
+#   group_by(Gene, ensembl.gene) %>%
+#   mutate(Centers=paste(Center, collapse=", "),
+#          nominations=length(unique(Center))) %>%
+#   ungroup() %>%
+#   select(-Center) %>%
+#   distinct() %>%
+#   arrange(-nominations)
+#  
+# targetManifest <- targetListDistinct %>%
+#   select(Gene,
+#          Centers,
+#          nominations) %>%
+#   distinct() %>%
+#   arrange(-nominations)
+# 
+# druggabilityData <- geneExprData %>%
+#   select(GENE_SYMBOL=hgnc_symbol) %>% 
+#   distinct() %>% 
+#   mutate(status_assays=NA, status_in_vivo_work=NA, status_known_ligands=NA)
+# 
 targetManifestTable <- targetManifest %>%
-  left_join(druggabilityData %>% select(Gene=GENE_SYMBOL, 
-                                        Assays=status_assays, 
-                                        `In vivo`=status_in_vivo_work, 
-                                        `Known ligands`=status_known_ligands)) %>% 
-  DT::datatable(options=list(lengthChange=FALSE, 
-                             pageLength=50, dom="ftp"), 
+  left_join(druggabilityData %>% select(Gene=GENE_SYMBOL,
+                                        Assays=status_assays,
+                                        `In vivo`=status_in_vivo_work,
+                                        `Known ligands`=status_known_ligands)) %>%
+  DT::datatable(options=list(lengthChange=FALSE,
+                             pageLength=50, dom="ftp"),
                 rownames = FALSE,
-                selection = list(mode='single', target='row')) %>% 
+                selection = list(mode='single', target='row')) %>%
   DT::formatStyle(c('Assays', 'Known ligands', 'In vivo'),
-                  backgroundColor=DT::styleEqual(c("good", "medium", "bad", "unknown"), #levels(tmp$status), 
+                  backgroundColor=DT::styleEqual(c("good", "medium", "bad", "unknown"), #levels(tmp$status),
                                                  c("green", "orange", "red", "grey")))
 
 # network <- fread(getFileLocation(synGet("syn7770770")),
@@ -133,3 +173,7 @@ targetManifestTable <- targetManifest %>%
 # nTargets <- targetListOrig %>% count(group)
 # 
 # # save(ISMR, nTargets, network, targetList, targetListOrig, druggabilityData, targetManifest, targetListDistinct, genesForNetwork, gg, geneFPKMLong, gtex, medianGTEx, file="./data2load.RData")
+
+# diffExprData <- synapseClient::synGet("syn11180450") %>% 
+#   synapseClient::getFileLocation() %>% 
+#   readr::read_csv()

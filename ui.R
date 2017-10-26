@@ -50,8 +50,15 @@ dashboardPage(
               fluidRow(
                 column(width=2),
                 column(width=8,
-                       includeMarkdown('info.md'),
-                       DT::dataTableOutput('targetlist', width='100%')
+                       includeMarkdown('welcome.md'),
+                       tabBox(id='inputgene', width=NULL,
+                              tabPanel("Gene Search", id="selectAGene",
+                                       uiOutput("selectGeneBox"),
+                                       actionButton('selectGeneBoxButton', 'Go')),
+                              tabPanel("Nominated Target Genes", id="nominatedTargets",
+                                       includeMarkdown('info.md'),
+                                       DT::dataTableOutput('targetlist', width='100%'))
+                              )
                 ),
                 column(width=2))
       ),
