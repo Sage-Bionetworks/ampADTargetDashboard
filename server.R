@@ -320,6 +320,29 @@ shinyServer(function(input, output, session) {
               legend.position="bottom")
     })
     
+    output$selectForestPlot <- renderUI({
+      selectInput('forestModel', label='Model', multiple=FALSE, 
+                  choices=unique(dForFilter$Model), selected="Diagnosis")
+    })
+    
+    output$forest <- renderPlot({
+      input$plotForest
+      
+      params <- data.frame(hgnc_symbol=selectedGene(),
+                           model=input$forestModel)
+      
+      dForPlot <- inner_join(geneExprData, params) %>% 
+        mutate(study_tissue_sex=paste(Study, Tissue, Sex))
+      
+      p <- ggplot(dForPlot)
+      p <- p + geom_point(aes(y=logFC, x=study_tissue_sex))
+      p <- p + geom_pointrange(aes(ymax = CI.R, ymin = CI.L, y=logFC, x=study_tissue_sex, color=Study))
+      p <- p + geom_hline(yintercept = 0, linetype = 2)
+      p <- p + coord_flip()
+      p <- p + theme_minimal()
+      p
+    }) 
+    
     output$video <- renderUI({
       geneName <- selectedGene()
       geneList <- targetList %>% filter(Gene == geneName) %>% select(Center) %>% top_n(1)
