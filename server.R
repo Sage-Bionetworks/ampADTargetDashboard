@@ -11,121 +11,209 @@ library(igraph)
 library(wesanderson)
 
 shinyServer(function(input, output, session) {
+  addClass(selector = "body", class = "sidebar-collapse")
   
-  # cookie <- "none"
-  
-  # if (!interactive()) {
-  session$sendCustomMessage(type="readCookie",
-                            message=list(name='org.sagebionetworks.security.user.login.token'))
-  # cookie <- input$cookie
-  # }
-  
-  foo <- observeEvent(input$cookie, {
-    
-    # if (!interactive()) {
-    synapseLogin(sessionToken=input$cookie)
-    # }
-    # else {
-    #   synapseLogin()
-    # }
-    
+    # session$sendCustomMessage(type="readCookie",
+  #                           message=list(name='org.sagebionetworks.security.user.login.token'))
+  # 
+  # foo <- observeEvent(input$cookie, {
+  # 
+  #   synapseLogin(sessionToken=input$cookie)
+    synapseLogin()
     withProgress(message = 'Loading data...',
                  {source("load.R")})
     
-    selectedGene <- eventReactive(input$getdetails, {
-      targetManifest[as.numeric(input$targetlist_rows_selected), ]$Gene
+    
+
+    selectedGene <- reactive({
+      if (input$inputgene == "Nominated Target Genes") {
+        gene <- targetManifest[as.numeric(input$targetlist_rows_selected), ]$Gene
+      }
+      else if (input$inputgene == "Gene Search") {
+        input$selectGeneBoxButton
+        gene <- input$inputSelectedGene
+        message(sprintf("Selected gene %s", gene))
+      }
+      return(gene)
     })
     
-    output$targetlist <- DT::renderDataTable(targetManifest,
-                                             options=list(lengthChange=FALSE, 
-                                                          pageLength=10, dom="tp"),
-                                             selection = list(mode='single', target='row', selected=1),
+    observeEvent(input$targetlist, {
+      updateTabItems(session, "tabs", "targetmanifest")
+    })
+
+    observeEvent(input$selectGeneBoxButton, {
+      updateTabItems(session, "tabs", "targetdetails")
+    })
+    
+    output$targetlist <- DT::renderDataTable(targetManifestTable,
                                              server = TRUE,
                                              rownames = FALSE,
                                              container=targetManifsetSketch)
+
+    output$gomf <- DT::renderDataTable({
+      
+      geneName <- selectedGene()
+      ensGene <- filter(geneDF, Gene == geneName)$ensembl.gene[1]
+      
+      res <- mygene::query(ensGene, fields = c('go.MF'))$hits$go$MF[[1]] %>%
+        dplyr::select(term, id)
+      
+      DT::datatable(res, options = list(lengthChange = FALSE, dom="tp", pageLength=5),
+                    rownames = FALSE)
+      
+      # # DT::datatable(data.frame(a=1, b=2 c=3))#,
+      #               # options=list(lengthChange=FALSE, 
+      #               #              pageLength=50, dom="ftp"),
+      #               # rownames = FALSE)
+    })
+
+    output$reactome <- DT::renderDataTable({
+      
+      geneName <- selectedGene()
+      ensGene <- filter(geneDF, Gene == geneName)$ensembl.gene[1]
+      
+      res <- mygene::query(ensGene, fields = c('pathway.reactome'))
+      
+      validate(need(!is.null(res$hits$pathway$reactome), 
+                    "No Reactome pathways found."))
+      
+      res <- res$hits$pathway$reactome[[1]] %>% 
+        select(name, id)
+      
+      DT::datatable(res, options = list(lengthChange = FALSE, dom="tp", pageLength=5),
+                    rownames = FALSE)
+      
+    })
+
+    output$evidence <- DT::renderDataTable({
+      
+      geneName <- selectedGene()
+      
+      res <- targetListOrig %>% filter(gene_symbol == geneName) %>% select(group,rank,evidence)
+
+      DT::datatable(res, options = list(lengthChange = FALSE, dom="tp", pageLength=10),
+                    rownames = FALSE)
+      
+    })
+
+    output$ISMR <- DT::renderDataTable({
+      
+      geneName <- selectedGene()
+
+      res <- ISMR %>% filter(`Gene Symbol` == geneName) %>% select(-`Gene Symbol`) %>% 
+        dplyr::select(Repository, dplyr::everything())
+      
+      DT::datatable(res %>% select(-URL), options = list(lengthChange = FALSE, dom="tp", pageLength=10),
+                    rownames = FALSE, escape=2)
+      
+      # # DT::datatable(data.frame(a=1, b=2 c=3))#,
+      #               # options=list(lengthChange=FALSE, 
+      #               #              pageLength=50, dom="ftp"),
+      #               # rownames = FALSE)
+    })
     
-    observeEvent(input$getdetails, {
+    observeEvent(input$targetlist_rows_selected, {
       updateTabItems(session, "tabs", selected = "targetdetails")
     })
     
-    output$user <- renderText({
-      sprintf('Welcome %s!', synGetUserProfile()@userName)
+    output$notificationMenu <- renderMenu({
+      prof <- synGetUserProfile()
+      id <- prof@ownerId
+      name <- prof@userName
+      
+      url <- sprintf("https://www.synapse.org/#!Profile:%s", id)
+      msgs <- list(notificationItem(text=sprintf("Logged in as %s", name),
+                                    icon=icon('user-circle'), status = "info",
+                                    href=url))
     })
-    
+
     edges <- reactive({
       ensGene <- filter(druggabilityData, GENE_SYMBOL== selectedGene())$ensembl.gene
       
       gg.neighbors <- ego(gg, 1, V(gg)[V(gg)$name %in% ensGene])
       
       if (length(gg.neighbors) < 1) {
-        gg.neighbors <- c()
+        # gg2 <- make_empty_graph(1)
+        # V(gg2)$name <- ensGene
+        # foo <- gg2
+        foo <- induced_subgraph(gg, vids = c())
       } else {
         gg.neighbors <- gg.neighbors[[1]]
+        foo <- induced_subgraph(gg, vids = gg.neighbors)
       }
       
-      foo <- induced_subgraph(gg, vids = gg.neighbors) %>%
+      foo %>%
         toVisNetworkData()
-      foo
+      
     })
     
-    output$gtex <- renderPlot({
-      
-      fpkmGenes <- filter(druggabilityData, GENE_SYMBOL == selectedGene())$ensembl.gene
-      
-      tmp <- gtex %>% dplyr::filter(ensembl.gene %in% fpkmGenes)
-      
-      p <- ggplot(tmp, aes(x=tissue, y=medianFPKM))
-      p <- p + geom_col(aes(fill=tissue))
-      p <- p + geom_hline(yintercept = medianGTEx, color='red')
-      p <- p + theme_bw()
-      p <- p + theme(axis.text.x=element_text(angle=270, vjust = 0),
-                     legend.position = "none", 
-                     axis.title.x=element_blank())
-      p
-    })
+    # output$gtex <- renderPlot({
+    #   
+    #   fpkmGenes <- filter(gtex, hgnc_symbol == selectedGene())$ensembl.gene
+    #   message(sprintf('fpkmGenes = %s', fpkmGenes))
+    #   validate(need(length(fpkmGenes) > 0, "No expression data to display."))
+    #   
+    #   tmp <- gtex %>% dplyr::filter(ensembl.gene %in% fpkmGenes)
+    #   
+    #   p <- ggplot(tmp, aes(x=tissue, y=medianFPKM))
+    #   p <- p + geom_col(fill="black")
+    #   p <- p + geom_hline(yintercept = medianGTEx, color='red')
+    #   p <- p + theme_bw()
+    #   p <- p + theme(axis.text.x=element_text(angle=270, vjust = 0),
+    #                  legend.position = "none", 
+    #                  axis.title.x=element_blank())
+    #   p
+    # })
+
+    output$gtex <- renderImage({
+        # When input$n is 3, filename is ./images/image3.jpeg
+        filename <- normalizePath(file.path('./gxa_static.png'))
+        
+        # Return a list containing the filename and alt text
+        list(src = filename,
+             height = 400,
+             alt = 'GXA Static Image')
+        
+      }, deleteFile = FALSE)    
+    
+    output$gtexText <- renderText({"See more expression data at Expression Atlas. This expression view is provided by Expression Atlas. Please send any queries or feedback to arrayexpress-atlas@ebi.ac.uk."})
     
     output$expression <- renderPlot({
+
+      ensGene <- filter(geneDF, Gene == selectedGene())$ensembl.gene[1]
       
-      gg2 <- edges()
-      
-      if (nrow(gg2$nodes) == 0) {
-        fpkmGenes <- filter(druggabilityData, GENE_SYMBOL == selectedGene())$ensembl.gene
-      }
-      else {
-        fpkmGenes <- gg2$nodes$id
-      }
-      
-      print(fpkmGenes)
-      validate(need(length(fpkmGenes) <= 50, "Too many related genes to display - maximum is 50."))
-      
-      tmp <- geneFPKMLong %>% dplyr::filter(ensembl_gene_id %in% fpkmGenes)
-      
-      medianTmp <- tmp %>% group_by(hgnc_symbol) %>% 
-        summarize(median=median(fpkm)) %>% 
+      validate(need(length(ensGene) > 0, "No expression data to display."))
+      validate(need(length(ensGene) <= 50, "Too many related genes to display - maximum is 50."))
+
+      tmp <- geneFPKMLong %>% dplyr::filter(ensembl_gene_id %in% ensGene)
+
+      medianTmp <- tmp %>% group_by(hgnc_symbol) %>%
+        summarize(median=median(fpkm)) %>%
         arrange(median)
-      
-      tmp$hgnc_symbol <- factor(tmp$hgnc_symbol, 
+
+      tmp$hgnc_symbol <- factor(tmp$hgnc_symbol,
                                 levels=medianTmp$hgnc_symbol,
                                 ordered=TRUE)
-      
+      tmp <- tmp %>% dplyr::rename(`Cognitive Diagnosis`=cogdx)
       p <- ggplot(tmp, aes(x=hgnc_symbol, y=fpkm))
-      p <- p + geom_boxplot(aes(fill=cogdx))
+      p <- p + geom_boxplot(aes(fill=`Cognitive Diagnosis`))
       p <- p + scale_fill_manual(values=wes_palette("Chevalier"))
-      p <- p + theme_bw()
+      p <- p + scale_color_manual(values=wes_palette("Chevalier"))
+      p <- p + theme_bw() + theme(legend.position="bottom")
       p
     })
     
     output$network <- renderVisNetwork({
       
       gg2 <- edges()    
-      validate(need(nrow(gg2$edges) > 0, sprintf("No edges for the gene '%s'.", selectedGene())))
+      validate(need(nrow(gg2$edges) > 0, sprintf("No nodes for the gene '%s'.", selectedGene())))
       validate(need(nrow(gg2$edges) <= 50, sprintf("Network too large (%s edges) for the gene '%s'; maximum number of edges to show is 50.", nrow(edges), selectedGene())))
       
       nodes <- gg2$nodes %>% 
         select(id) %>% 
         left_join(genesForNetwork, by='id') %>% 
         select(gene, id, label) %>% 
-        dplyr::mutate(group=ifelse(label %in% druggabilityData$GENE_SYMBOL, "target", "other")) %>% 
+        dplyr::mutate(group=ifelse(label %in% targetManifest$Gene, "target", "other")) %>% 
         dplyr::mutate(group=ifelse(label == selectedGene(), "selected", group))
       
       n <- visNetwork(nodes, gg2$edges) %>% 
@@ -145,63 +233,149 @@ shinyServer(function(input, output, session) {
     
     output$edgeTable <- DT::renderDataTable(edges()$edges,
                                             options=list(lengthChange=FALSE, pageLength=5, dom="tp"))
-    
-    output$lillyConsensus <- renderInfoBox({
-      tmp <- druggabilityData %>% 
-        filter(GENE_SYMBOL == selectedGene()) %>% 
-        slice(1)
+
+    output$lillyDrugability <- renderPlot({
+      selGene <- selectedGene()
       
-      valueBox("Consensus", value=tmp$Lilly_DrugEBIlity_Consensus_Score, 
-               color=lillyStatusColors[[as.character(tmp$Lilly_DrugEBIlity_Consensus_Score)]])
-    })
-    
-    output$lillyStructureBased <- renderInfoBox({
       tmp <- druggabilityData %>%
-        filter(GENE_SYMBOL == selectedGene()) %>% 
-        slice(1)
+        filter(GENE_SYMBOL == selGene)
       
-      valueBox("Structure", value=tmp$`Lilly_GW_Druggability_Structure-based`,
-               color=lillyStatusColors[[as.character(tmp$`Lilly_GW_Druggability_Structure-based`
-               )]])
-    })
-    
-    output$targetInfo <- renderInfoBox({
-      geneName <- selectedGene()
-      geneList <- druggabilityData %>% filter(GENE_SYMBOL == geneName)
-      ens <- paste(unique(geneList$ensembl.gene), collapse=",")
+      if (nrow(tmp) == 0) {
+        tmp <- data_frame(GENE_SYMBOL=selGene, 
+                          Lilly_DrugEBIlity_Consensus_Score='unk',
+                          `Lilly_GW_Druggability_Structure-based`='unk')
+      }
+      tmp <- tmp %>%
+        select(GENE_SYMBOL, 
+               `Consensus Score`=Lilly_DrugEBIlity_Consensus_Score,
+               `Structure-based Score`=`Lilly_GW_Druggability_Structure-based`) %>% 
+        top_n(1) %>% 
+        tidyr::gather(key = 'type', value = 'score',
+                      c(`Consensus Score`,
+                      `Structure-based Score`)) %>% 
+        mutate(score=factor(score, levels=c("unk", "0", "1", "2", "3")))
       
-      infoBox("Selected Target", value=HTML(sprintf("<a href='http://www.genenames.org/cgi-bin/gene_search?search=%s' target='_blank'>%s</a><br/><a href='https://ensembl.org/Homo_sapiens/Gene/Summary?db=core;g=%s;' target='_blank'>%s</a><br/>Nominated by: %s", 
-                                                    geneName, geneName, ens, ens, paste(geneList$Center, collapse=","))), color = 'green')
-    })
-    
-    output$status <- renderPlot({
-      tmp <- druggabilityData %>%
-        filter(GENE_SYMBOL == selectedGene()) %>%
-        select(Center, starts_with("status")) %>% 
-        tidyr::gather(key = 'type', value = 'status', starts_with("status")) %>% 
-        mutate(status=factor(status, levels=c("good", "medium", "bad", "unknown")))
+      validate(need(nrow(tmp) > 0, "No data to display."))
       
-      tmp$type <- forcats::fct_recode(tmp$type, `Known Ligands`="status_known_ligands", 
-                                      `Crystal Structures`="status_crystal_structure", 
-                                      Pocket="status_pocket", Assays="status_assays", 
-                                      `In vivo`="status_in_vivo_work")
-      
+      tmp$Center <- NA
       ggplot(tmp, aes(x=type, y=Center)) + 
-        facet_grid(Center ~ type, scales="free") +
-        geom_tile(aes(fill=status)) + 
-        scale_fill_manual(values=oddiStatusColors) + 
+        facet_wrap( ~ type, scales="free", ncol=5) +
+        geom_tile(aes(fill=score)) + 
+        scale_fill_manual(values=lillyStatusColors, drop = FALSE) + 
         theme_bw() + 
         theme(axis.text=element_blank(), axis.title=element_blank(),
               axis.ticks=element_blank(), strip.text.y=element_text(angle=360),
               strip.background=element_rect(fill="white"),
               legend.position="bottom")
     })
+
+    output$targetInfo <- renderUI({
+      geneName <- selectedGene()
+      
+      ensGene <- filter(geneDF, Gene == geneName)$ensembl.gene[1]
+      
+      geneList <- targetList %>% filter(Gene == geneName)
+      
+      if (nrow(geneList) > 0) {
+        ens <- paste(unique(geneList$ensembl.gene), collapse=",")
+        centers <- paste(geneList$Center, collapse=", ")
+      }
+      else {
+        ens <- ensGene
+        centers = ""
+      }
+      
+      res <- mygene::getGene(ensGene, fields = c('name', 'summary'))[[1]]
+      
+      tagList(tags$h3(tags$a(href=sprintf("http://www.genenames.org/cgi-bin/gene_search?search=%s", geneName),
+                             target="blank",geneName),
+                      sprintf("(%s)", res$name)),
+              tags$h4(tags$a(href=sprintf('https://www.targetvalidation.org/target/%s', ens), target="blank", ens),
+                      "(Open Targets Platform)"),
+              tags$h4(sprintf("Nominated by: %s", centers)),
+              tags$p(sprintf("Summary: %s", res$summary))
+              )
+    })
+    
+    output$status <- renderPlot({
+      
+      geneName <- selectedGene()
+      tmp <- druggabilityData %>%
+        filter(GENE_SYMBOL == geneName)
+      
+      if (nrow(tmp) == 0) {
+        y <- rbind(tmp, rep('unknown', ncol(tmp)))
+        colnames(y) <- colnames(tmp)
+        y$GENE_SYMBOL <- geneName
+        tmp <- y
+      }
+
+      tmp <- tmp %>%
+        select(starts_with("status")) %>% 
+        top_n(1) %>% 
+        tidyr::gather(key = 'type', value = 'status', starts_with("status")) %>% 
+        mutate(status=factor(status, levels=c("good", "medium", "bad", "unknown"), ordered=TRUE))
+      
+      validate(need(nrow(tmp) > 0, "No data to display."))
+      
+      tmp$type <- forcats::fct_recode(tmp$type, `Known Ligands`="status_known_ligands", 
+                                      `Crystal Structures`="status_crystal_structure", 
+                                      Pocket="status_pocket", Assays="status_assays", 
+                                      `In vivo`="status_in_vivo_work")
+      tmp$Center <- NA
+      ggplot(tmp, aes(x=type, y=Center)) + 
+        facet_wrap( ~ type, scales="free", ncol=5) +
+        geom_tile(aes(fill=status)) + 
+        scale_fill_manual(values=oddiStatusColors, drop = FALSE) + 
+        theme_bw() + 
+        theme(axis.text=element_blank(), axis.title=element_blank(),
+              axis.ticks=element_blank(), strip.text.y=element_text(angle=360),
+              strip.background=element_rect(fill="white"),
+              legend.position="bottom")
+    })
+
+    output$selectGeneBox <- renderUI({
+      selectizeInput('inputSelectedGene', label='Gene Symbol', multiple=FALSE,
+                     choices=c("Select a gene"="", unique(geneExprData$hgnc_symbol)), 
+                     selected=NULL, width="50%", 
+                     options=list(highlight=TRUE, openOnFocus=FALSE, 
+                                  closeAfterSelect=TRUE, selectOnTab=TRUE))
+    })
+    
+    output$selectForestPlot <- renderUI({
+      selectInput('forestModel', label='Model', multiple=FALSE, 
+                  choices=unique(dForFilter$Model), selected="Diagnosis",
+                  width="75%")
+    })
+    
+    output$forest <- renderPlot({
+      params <- data.frame(hgnc_symbol=selectedGene(),
+                           Model=input$forestModel)
+      
+      dForPlot <- inner_join(geneExprData, params) %>% 
+        mutate(study_tissue_sex=paste(Study, Tissue, Sex))
+      
+      p <- ggplot(dForPlot)
+      p <- p + geom_point(aes(y=logFC, x=study_tissue_sex))
+      p <- p + geom_pointrange(aes(ymax = CI.R, ymin = CI.L, y=logFC, x=study_tissue_sex, color=Study))
+      p <- p + geom_hline(yintercept = 0, linetype = 2)
+      p <- p + coord_flip()
+      p <- p + theme_minimal()
+      p
+    }) 
+    
     
     output$video <- renderUI({
-      center <- targetManifest[as.numeric(input$targetlist_rows_selected), ]$Center[1]
+      geneName <- selectedGene()
+      geneList <- targetList %>% filter(Gene == geneName) %>% select(Center) %>% top_n(1)
       
-      HTML(sprintf('<video height="250" controls><source src="%s" type="video/mp4"></video>', 
-                   vids[[center]]))
+      validate(need(geneList$Center %in% names(vids), sprintf("No video from %s.", geneList$Center)))
+
+      HTML(sprintf('<a href="%s">Video</a>', 
+                   vids[[geneList$Center]]))
+      
+      # HTML(sprintf('<video height="250" controls><source src="%s" type="video/mp4"></video>', 
+      #              vids[[geneList$Center]]))
     })
-  })
+   ## })
 })
