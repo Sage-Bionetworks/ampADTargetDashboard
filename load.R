@@ -60,10 +60,15 @@ geneExprData <- synGet('syn11180450') %>%
   read_tsv() %>% 
   filter(stringr::str_detect(Model, "Diagnosis")) %>% 
   rename(Sex=Gender) %>% 
-  mutate(Sex=forcats::fct_recode(Sex, Males="MALE", 
+  mutate(hgnc_symbol=ifelse(is.na(hgnc_symbol), ensembl_gene_id, hgnc_symbol),
+         Sex=forcats::fct_recode(Sex, Males="MALE", 
                                  Females="FEMALE", 
                                  `Males and Females`="ALL"),
          Model=stringr::str_replace(Model, "\\.", " + "))
+
+geneDF <- geneExprData %>% 
+  select(Gene=hgnc_symbol, `ensembl.gene`=ensembl_gene_id) %>%
+  distinct()
 
 # create list of filters
 dForFilter <- geneExprData %>% distinct(Study, Tissue, Model, Sex)

@@ -53,12 +53,12 @@ shinyServer(function(input, output, session) {
     output$gomf <- DT::renderDataTable({
       
       geneName <- selectedGene()
-      ensGene <- filter(druggabilityData, GENE_SYMBOL== geneName)$ensembl.gene[1]
+      ensGene <- filter(geneDF, Gene == geneName)$ensembl.gene[1]
       
       res <- mygene::query(ensGene, fields = c('go.MF'))$hits$go$MF[[1]] %>%
         dplyr::select(term, id)
       
-      DT::datatable(res, options = list(lengthChange = FALSE, dom="tp", pageLength=10),
+      DT::datatable(res, options = list(lengthChange = FALSE, dom="tp", pageLength=5),
                     rownames = FALSE)
       
       # # DT::datatable(data.frame(a=1, b=2 c=3))#,
@@ -70,7 +70,7 @@ shinyServer(function(input, output, session) {
     output$reactome <- DT::renderDataTable({
       
       geneName <- selectedGene()
-      ensGene <- filter(druggabilityData, GENE_SYMBOL== geneName)$ensembl.gene[1]
+      ensGene <- filter(geneDF, Gene == geneName)$ensembl.gene[1]
       
       res <- mygene::query(ensGene, fields = c('pathway.reactome'))
       
@@ -80,7 +80,7 @@ shinyServer(function(input, output, session) {
       res <- res$hits$pathway$reactome[[1]] %>% 
         select(name, id)
       
-      DT::datatable(res, options = list(lengthChange = FALSE, dom="tp", pageLength=10),
+      DT::datatable(res, options = list(lengthChange = FALSE, dom="tp", pageLength=5),
                     rownames = FALSE)
       
     })
@@ -180,20 +180,12 @@ shinyServer(function(input, output, session) {
     
     output$expression <- renderPlot({
 
-      gg2 <- edges()
+      ensGene <- filter(geneDF, Gene == selectedGene())$ensembl.gene[1]
+      
+      validate(need(length(ensGene) > 0, "No expression data to display."))
+      validate(need(length(ensGene) <= 50, "Too many related genes to display - maximum is 50."))
 
-      if (nrow(gg2$nodes) == 0) {
-        fpkmGenes <- filter(druggabilityData, GENE_SYMBOL == selectedGene())$ensembl.gene
-      }
-      else {
-        fpkmGenes <- gg2$nodes$id
-      }
-
-      print(fpkmGenes)
-      validate(need(length(fpkmGenes) > 0, "No expression data to display."))
-      validate(need(length(fpkmGenes) <= 50, "Too many related genes to display - maximum is 50."))
-
-      tmp <- geneFPKMLong %>% dplyr::filter(ensembl_gene_id %in% fpkmGenes)
+      tmp <- geneFPKMLong %>% dplyr::filter(ensembl_gene_id %in% ensGene)
 
       medianTmp <- tmp %>% group_by(hgnc_symbol) %>%
         summarize(median=median(fpkm)) %>%
@@ -206,6 +198,7 @@ shinyServer(function(input, output, session) {
       p <- ggplot(tmp, aes(x=hgnc_symbol, y=fpkm))
       p <- p + geom_boxplot(aes(fill=`Cognitive Diagnosis`))
       p <- p + scale_fill_manual(values=wes_palette("Chevalier"))
+      p <- p + scale_color_manual(values=wes_palette("Chevalier"))
       p <- p + theme_bw() + theme(legend.position="bottom")
       p
     })
@@ -279,10 +272,18 @@ shinyServer(function(input, output, session) {
     output$targetInfo <- renderUI({
       geneName <- selectedGene()
       
-      ensGene <- filter(druggabilityData, GENE_SYMBOL== geneName)$ensembl.gene[1]
+      ensGene <- filter(geneDF, Gene == geneName)$ensembl.gene[1]
       
       geneList <- targetList %>% filter(Gene == geneName)
-      ens <- paste(unique(geneList$ensembl.gene), collapse=",")
+      
+      if (nrow(geneList) > 0) {
+        ens <- paste(unique(geneList$ensembl.gene), collapse=",")
+        centers <- paste(geneList$Center, collapse=", ")
+      }
+      else {
+        ens <- ensGene
+        centers = ""
+      }
       
       res <- mygene::getGene(ensGene, fields = c('name', 'summary'))[[1]]
       
@@ -291,7 +292,7 @@ shinyServer(function(input, output, session) {
                       sprintf("(%s)", res$name)),
               tags$h4(tags$a(href=sprintf('https://www.targetvalidation.org/target/%s', ens), target="blank", ens),
                       "(Open Targets Platform)"),
-              tags$h4(sprintf("Nominated by: %s", paste(geneList$Center, collapse=", "))),
+              tags$h4(sprintf("Nominated by: %s", centers)),
               tags$p(sprintf("Summary: %s", res$summary))
               )
     })
@@ -334,9 +335,11 @@ shinyServer(function(input, output, session) {
     })
 
     output$selectGeneBox <- renderUI({
-      selectizeInput('inputSelectedGene', label='Gene Symbol', multiple=FALSE, 
-                  choices=unique(geneExprData$hgnc_symbol), selected="VGF",
-                  width="25%")
+      selectizeInput('inputSelectedGene', label='Gene Symbol', multiple=FALSE,
+                     choices=c("Select a gene"="", unique(geneExprData$hgnc_symbol)), 
+                     selected="VGF", width="50%", 
+                     options=list(highlight=TRUE, openOnFocus=FALSE, 
+                                  closeAfterSelect=TRUE, selectOnTab=TRUE))
     })
     
     output$selectForestPlot <- renderUI({
