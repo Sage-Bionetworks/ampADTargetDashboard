@@ -114,7 +114,7 @@ dashboardPage(
                                   tipify(icon("question-sign",
                                               lib="glyphicon"),
                                          title="Availability of mouse models for the selected gene from the International Mouse Strain Resource (IMSR).")),
-                    solidHeader=FALSE, collapsible = TRUE, collapsed = TRUE,
+                    solidHeader=FALSE, collapsible = TRUE, collapsed = FALSE,
                     status="success", width=4,
                     DT::dataTableOutput("ISMR"))
               )

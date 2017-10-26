@@ -103,8 +103,8 @@ shinyServer(function(input, output, session) {
       res <- ISMR %>% filter(`Gene Symbol` == geneName) %>% select(-`Gene Symbol`) %>% 
         dplyr::select(Repository, dplyr::everything())
       
-      DT::datatable(res, options = list(lengthChange = FALSE, dom="tp", pageLength=10),
-                    rownames = FALSE)
+      DT::datatable(res %>% select(-URL), options = list(lengthChange = FALSE, dom="tp", pageLength=10),
+                    rownames = FALSE, escape=2)
       
       # # DT::datatable(data.frame(a=1, b=2 c=3))#,
       #               # options=list(lengthChange=FALSE, 
@@ -337,7 +337,7 @@ shinyServer(function(input, output, session) {
     output$selectGeneBox <- renderUI({
       selectizeInput('inputSelectedGene', label='Gene Symbol', multiple=FALSE,
                      choices=c("Select a gene"="", unique(geneExprData$hgnc_symbol)), 
-                     selected="VGF", width="50%", 
+                     selected=NULL, width="50%", 
                      options=list(highlight=TRUE, openOnFocus=FALSE, 
                                   closeAfterSelect=TRUE, selectOnTab=TRUE))
     })

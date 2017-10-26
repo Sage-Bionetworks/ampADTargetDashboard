@@ -1,4 +1,5 @@
-load("/home/kdaily/src/WallOfTargets/data2load.RData")
+data2load <- synGet('syn11149956')
+load(getFileLocation(data2load))
 
 # druggabilityData <- fread(getFileLocation(synGet("syn7555804")),
 #                           data.table=FALSE) %>%
@@ -55,23 +56,23 @@ load("/home/kdaily/src/WallOfTargets/data2load.RData")
 #   distinct() %>%
 #   arrange(-nominations)
 
-geneExprData <- synGet('syn11180450') %>% 
-  getFileLocation() %>% 
-  read_tsv() %>% 
-  filter(stringr::str_detect(Model, "Diagnosis")) %>% 
-  rename(Sex=Gender) %>% 
-  mutate(hgnc_symbol=ifelse(is.na(hgnc_symbol), ensembl_gene_id, hgnc_symbol),
-         Sex=forcats::fct_recode(Sex, Males="MALE", 
-                                 Females="FEMALE", 
-                                 `Males and Females`="ALL"),
-         Model=stringr::str_replace(Model, "\\.", " + "))
-
-geneDF <- geneExprData %>% 
-  select(Gene=hgnc_symbol, `ensembl.gene`=ensembl_gene_id) %>%
-  distinct()
-
-# create list of filters
-dForFilter <- geneExprData %>% distinct(Study, Tissue, Model, Sex)
+# geneExprData <- synGet('syn11180450') %>% 
+#   getFileLocation() %>% 
+#   read_tsv() %>% 
+#   filter(stringr::str_detect(Model, "Diagnosis")) %>% 
+#   rename(Sex=Gender) %>% 
+#   mutate(hgnc_symbol=ifelse(is.na(hgnc_symbol), ensembl_gene_id, hgnc_symbol),
+#          Sex=forcats::fct_recode(Sex, Males="MALE", 
+#                                  Females="FEMALE", 
+#                                  `Males and Females`="ALL"),
+#          Model=stringr::str_replace(Model, "\\.", " + "))
+# 
+# geneDF <- geneExprData %>% 
+#   select(Gene=hgnc_symbol, `ensembl.gene`=ensembl_gene_id) %>%
+#   distinct()
+# 
+# # create list of filters
+# dForFilter <- geneExprData %>% distinct(Study, Tissue, Model, Sex)
 
 ## PLACEHOLDER DATA
 # targetList <- geneExprData %>%
@@ -135,21 +136,19 @@ targetManifestTable <- targetManifest %>%
 # 
 # gg <- graph_from_data_frame(network %>% distinct())
 # 
-# # geneFPKM <- fread(getFileLocation(synGet("syn5581268")),
-# #                   data.table=FALSE) %>%
-# #   filter(ensembl_gene_id %in% c(genesForNetwork$gene,
-# #                                 druggabilityData$ensembl.gene))
-# #
-# # geneCovariates <- fread(getFileLocation(synGet("syn5581227")),
-# #                         data.table=FALSE) %>%
-# #   filter(cogdx %in% c(1, 4)) %>%
-# #   mutate(cogdx=factor(cogdx, ordered=TRUE))
-# #
-# # geneFPKMLong <- geneFPKM %>%
-# #   tidyr::gather(sample, fpkm, 3:ncol(geneFPKM)) %>%
-# #   left_join(geneCovariates %>% select(Sampleid_batch, cogdx),
-# #             by=c("sample"="Sampleid_batch")) %>%
-# #   filter(!is.na(cogdx))
+# geneFPKM <- fread(getFileLocation(synGet("syn5581268")),
+#                   data.table=FALSE)
+# 
+# geneCovariates <- fread(getFileLocation(synGet("syn5581227")),
+#                         data.table=FALSE) %>%
+#   filter(cogdx %in% c(1, 4)) %>%
+#   mutate(cogdx=factor(cogdx, ordered=TRUE))
+# 
+# geneFPKMLong <- geneFPKM %>%
+#   tidyr::gather(sample, fpkm, 3:ncol(geneFPKM)) %>%
+#   left_join(geneCovariates %>% select(Sampleid_batch, cogdx),
+#             by=c("sample"="Sampleid_batch")) %>%
+#   filter(!is.na(cogdx))
 # 
 # geneFPKMLong <- fread(getFileLocation(synGet("syn7555798")),
 #                       data.table=FALSE)
@@ -173,12 +172,16 @@ targetManifestTable <- targetManifest %>%
 # 
 # ISMR <- readr::read_csv("/home/kdaily/src/WallOfTargets/ISMR.csv") %>% 
 #   dplyr::select(`Strain ID`, `Strain/Stock`, Repository, `Gene Symbol`, URL) %>% 
-#   mutate(`Gene Symbol`=toupper(`Gene Symbol`))
+#   mutate(`Gene Symbol`=toupper(`Gene Symbol`)) %>% 
+#   mutate(`Strain/Stock`=stringr::str_c("<a href='", URL, "'>", `Strain/Stock`, "</a>"))
 # 
 # nTargets <- targetListOrig %>% count(group)
 # 
-# # save(ISMR, nTargets, network, targetList, targetListOrig, druggabilityData, targetManifest, targetListDistinct, genesForNetwork, gg, geneFPKMLong, gtex, medianGTEx, file="./data2load.RData")
-
+# save(ISMR, nTargets, network, targetList, targetListOrig,
+#      druggabilityData, targetManifest, targetListDistinct, genesForNetwork,
+#      gg, geneFPKMLong, gtex, medianGTEx, geneExprData, geneDF, dForFilter,
+#      file="./data2load.RData")
+# synStore(File("./data2load.RData", parentId="syn7525089"))
 # diffExprData <- synapseClient::synGet("syn11180450") %>% 
 #   synapseClient::getFileLocation() %>% 
 #   readr::read_csv()
