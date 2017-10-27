@@ -353,7 +353,7 @@ shinyServer(function(input, output, session) {
                                   closeAfterSelect=TRUE, selectOnTab=TRUE))
     })
     
-    output$selectForestPlot <- renderUI({
+    output$forestSelect <- renderUI({
       selectInput('forestModel', label='Model', multiple=FALSE, 
                   choices=unique(dForFilter$Model), selected="Diagnosis",
                   width="75%")
@@ -375,6 +375,33 @@ shinyServer(function(input, output, session) {
       p
     }) 
     
+    output$volcanoSelect <- renderUI({
+      tagList(selectInput(inputId="Study", label="Study", 
+                          choices=dForFilter$Study, multiple = FALSE,
+                          selected="MAYO"),
+              selectInput(inputId="Tissue", label="Tissue", 
+                          choices=dForFilter$Tissue, multiple = FALSE,
+                          selected="CER"),
+              selectInput(inputId="Model", label="Model", 
+                          choices=dForFilter$Model, multiple = FALSE,
+                          selected="Diagnosis"),
+              selectInput(inputId="Sex", label="Sex", 
+                          choices=dForFilter$Sex, multiple = FALSE,
+                          selected="Males and Females"))
+    })
+    
+    output$volcano <- renderPlotly({
+      
+      params <- data.frame(Study=input$Study, Tissue=input$Tissue,
+                           Model=input$Model, Sex=input$Sex)
+      
+      dForPlot <- inner_join(geneExprData, params)
+      
+      p <- ggplot(dForPlot)
+      p <- p + geom_point(aes(x=logFC, y=-log10(adj.P.Val), label=hgnc_symbol), alpha=(1/3))
+      p <- p + theme_minimal()
+      ggplotly(p) %>% config(displayModeBar = F)
+    })
     
     output$video <- renderUI({
       geneName <- selectedGene()

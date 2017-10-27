@@ -119,10 +119,11 @@ dashboardPage(
                     status="danger", width=12, 
                     splitLayout(cellWidths = c("25%", "75%"),
                                 cellArgs = list(style = "padding: 3px"),
-                                tagList(h3("Differential Expression"), 
-                                        plotOutput("expression")),
+                                tagList(h3("Volcano Plot"),
+                                        uiOutput("volcanoSelect"),
+                                        plotOutput("volcano")),
                                 tagList(h3("Log fold change forest plot"), 
-                                        uiOutput('selectForestPlot'), 
+                                        uiOutput('forestSelect'), 
                                         plotOutput("forest")))
                     )
                 ),
