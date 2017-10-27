@@ -30,10 +30,10 @@ targetManifestTable <- targetManifest %>%
                   backgroundColor=DT::styleEqual(c("good", "medium", "bad", "unknown"), #levels(tmp$status),
                                                  c("green", "orange", "red", "grey")))
 
-geneExprDataId <- "syn11318688"
+geneExprDataId <- "syn11326321"
 geneExprData <- synGet(geneExprDataId) %>% 
   getFileLocation %>% 
-  read_csv()
+  read_feather()
 
 geneDF <- geneExprData %>%
   dplyr::select(Gene=hgnc_symbol, `ensembl.gene`=ensembl_gene_id) %>%
@@ -48,7 +48,7 @@ IMSR <- synGet(IMSRId) %>%
   getFileLocation() %>% 
   read_csv()
 
-fGeneFPKMLongId <- 'syn7555798'
+fGeneFPKMLongId <- 'syn11327106'
 geneFPKMLong <- synGet(fGeneFPKMLongId) %>% 
   getFileLocation() %>% 
-  read_csv()
+  read_feather()
