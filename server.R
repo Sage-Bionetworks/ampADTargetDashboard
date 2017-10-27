@@ -1,10 +1,3 @@
-
-# This is the server logic for a Shiny web application.
-# You can find out more about building applications with Shiny here:
-#
-# http://shiny.rstudio.com
-#
-
 library(shiny)
 library(visNetwork)
 library(igraph)
@@ -23,18 +16,27 @@ shinyServer(function(input, output, session) {
     withProgress(message = 'Loading data...',
                  {source("load.R")})
     
-    
+    gene <- reactiveValues(geneName=NULL)
 
+    observeEvent(input$targetlist_rows_selected, {
+      gene$geneName <- targetManifest[as.numeric(input$targetlist_rows_selected), ]$Gene
+    })
+    
+    observeEvent(input$selectGeneBoxButton, {
+      gene$geneName <- input$inputSelectedGene
+
+    })
+    
     selectedGene <- reactive({
-      if (input$inputgene == "Nominated Target Genes") {
-        gene <- targetManifest[as.numeric(input$targetlist_rows_selected), ]$Gene
-      }
-      else if (input$inputgene == "Gene Search") {
-        input$selectGeneBoxButton
-        gene <- input$inputSelectedGene
-        message(sprintf("Selected gene %s", gene))
-      }
-      return(gene)
+      gene$geneName
+      # if (input$inputgene == "Nominated Target Genes") {
+      #   gene <- targetManifest[as.numeric(input$targetlist_rows_selected), ]$Gene
+      # }
+      # else if (input$inputgene == "Gene Search") {
+      #   input$selectGeneBoxButton
+      #   gene <- input$inputSelectedGene
+      # }
+      # return(gene)
     })
     
     observeEvent(input$targetlist, {
@@ -78,7 +80,7 @@ shinyServer(function(input, output, session) {
                     "No Reactome pathways found."))
       
       res <- res$hits$pathway$reactome[[1]] %>% 
-        select(name, id)
+        dplyr::select(name, id)
       
       DT::datatable(res, options = list(lengthChange = FALSE, dom="tp", pageLength=5),
                     rownames = FALSE)
@@ -89,27 +91,26 @@ shinyServer(function(input, output, session) {
       
       geneName <- selectedGene()
       
-      res <- targetListOrig %>% filter(gene_symbol == geneName) %>% select(group,rank,evidence)
+      res <- targetListOrig %>% 
+        dplyr::filter(gene_symbol == geneName) %>% 
+        dplyr::select(group,rank,evidence)
 
       DT::datatable(res, options = list(lengthChange = FALSE, dom="tp", pageLength=10),
                     rownames = FALSE)
       
     })
 
-    output$ISMR <- DT::renderDataTable({
+    output$IMSR <- DT::renderDataTable({
       
       geneName <- selectedGene()
 
-      res <- ISMR %>% filter(`Gene Symbol` == geneName) %>% select(-`Gene Symbol`) %>% 
+      res <- IMSR %>% filter(`Gene Symbol` == geneName) %>% 
+        dplyr::select(-`Gene Symbol`, -URL) %>% 
         dplyr::select(Repository, dplyr::everything())
       
-      DT::datatable(res %>% select(-URL), options = list(lengthChange = FALSE, dom="tp", pageLength=10),
+      DT::datatable(res, options = list(lengthChange = FALSE, 
+                                        dom="tp", pageLength=5),
                     rownames = FALSE, escape=2)
-      
-      # # DT::datatable(data.frame(a=1, b=2 c=3))#,
-      #               # options=list(lengthChange=FALSE, 
-      #               #              pageLength=50, dom="ftp"),
-      #               # rownames = FALSE)
     })
     
     observeEvent(input$targetlist_rows_selected, {
@@ -127,25 +128,25 @@ shinyServer(function(input, output, session) {
                                     href=url))
     })
 
-    edges <- reactive({
-      ensGene <- filter(druggabilityData, GENE_SYMBOL== selectedGene())$ensembl.gene
-      
-      gg.neighbors <- ego(gg, 1, V(gg)[V(gg)$name %in% ensGene])
-      
-      if (length(gg.neighbors) < 1) {
-        # gg2 <- make_empty_graph(1)
-        # V(gg2)$name <- ensGene
-        # foo <- gg2
-        foo <- induced_subgraph(gg, vids = c())
-      } else {
-        gg.neighbors <- gg.neighbors[[1]]
-        foo <- induced_subgraph(gg, vids = gg.neighbors)
-      }
-      
-      foo %>%
-        toVisNetworkData()
-      
-    })
+    # edges <- reactive({
+    #   ensGene <- filter(druggabilityData, GENE_SYMBOL== selectedGene())$ensembl.gene
+    #   
+    #   gg.neighbors <- ego(gg, 1, V(gg)[V(gg)$name %in% ensGene])
+    #   
+    #   if (length(gg.neighbors) < 1) {
+    #     # gg2 <- make_empty_graph(1)
+    #     # V(gg2)$name <- ensGene
+    #     # foo <- gg2
+    #     foo <- induced_subgraph(gg, vids = c())
+    #   } else {
+    #     gg.neighbors <- gg.neighbors[[1]]
+    #     foo <- induced_subgraph(gg, vids = gg.neighbors)
+    #   }
+    #   
+    #   foo %>%
+    #     toVisNetworkData()
+    #   
+    # })
     
     # output$gtex <- renderPlot({
     #   
@@ -165,18 +166,18 @@ shinyServer(function(input, output, session) {
     #   p
     # })
 
-    output$gtex <- renderImage({
-        # When input$n is 3, filename is ./images/image3.jpeg
-        filename <- normalizePath(file.path('./gxa_static.png'))
-        
-        # Return a list containing the filename and alt text
-        list(src = filename,
-             height = 400,
-             alt = 'GXA Static Image')
-        
-      }, deleteFile = FALSE)    
+    # output$gtex <- renderImage({
+    #     # When input$n is 3, filename is ./images/image3.jpeg
+    #     filename <- normalizePath(file.path('./gxa_static.png'))
+    #     
+    #     # Return a list containing the filename and alt text
+    #     list(src = filename,
+    #          height = 400,
+    #          alt = 'GXA Static Image')
+    #     
+    #   }, deleteFile = FALSE)    
     
-    output$gtexText <- renderText({"See more expression data at Expression Atlas. This expression view is provided by Expression Atlas. Please send any queries or feedback to arrayexpress-atlas@ebi.ac.uk."})
+    # output$gtexText <- renderText({"See more expression data at Expression Atlas. This expression view is provided by Expression Atlas. Please send any queries or feedback to arrayexpress-atlas@ebi.ac.uk."})
     
     output$expression <- renderPlot({
 
@@ -194,7 +195,7 @@ shinyServer(function(input, output, session) {
       tmp$hgnc_symbol <- factor(tmp$hgnc_symbol,
                                 levels=medianTmp$hgnc_symbol,
                                 ordered=TRUE)
-      tmp <- tmp %>% dplyr::rename(`Cognitive Diagnosis`=cogdx)
+      
       p <- ggplot(tmp, aes(x=hgnc_symbol, y=fpkm))
       p <- p + geom_boxplot(aes(fill=`Cognitive Diagnosis`))
       p <- p + scale_fill_manual(values=wes_palette("Chevalier"))
@@ -203,78 +204,78 @@ shinyServer(function(input, output, session) {
       p
     })
     
-    output$network <- renderVisNetwork({
-      
-      gg2 <- edges()    
-      validate(need(nrow(gg2$edges) > 0, sprintf("No nodes for the gene '%s'.", selectedGene())))
-      validate(need(nrow(gg2$edges) <= 50, sprintf("Network too large (%s edges) for the gene '%s'; maximum number of edges to show is 50.", nrow(edges), selectedGene())))
-      
-      nodes <- gg2$nodes %>% 
-        select(id) %>% 
-        left_join(genesForNetwork, by='id') %>% 
-        select(gene, id, label) %>% 
-        dplyr::mutate(group=ifelse(label %in% targetManifest$Gene, "target", "other")) %>% 
-        dplyr::mutate(group=ifelse(label == selectedGene(), "selected", group))
-      
-      n <- visNetwork(nodes, gg2$edges) %>% 
-        visPhysics(solver="forceAtlas2Based", stabilization = TRUE) %>% 
-        visEdges(color='black') %>% 
-        visLegend() %>% 
-        visGroups(groupname='selected', color='green') %>% 
-        visGroups(groupname='target', color='#97C1FC') %>% 
-        visGroups(groupname='other', color='#FFD58F')
-      
-      # if (nrow(edges) <=10) {
-      #   n <- n %>% visIgraphLayout()
-      # }
-      
-      n
-    })
-    
-    output$edgeTable <- DT::renderDataTable(edges()$edges,
-                                            options=list(lengthChange=FALSE, pageLength=5, dom="tp"))
+    # output$network <- renderVisNetwork({
+    #   
+    #   gg2 <- edges()    
+    #   validate(need(nrow(gg2$edges) > 0, sprintf("No nodes for the gene '%s'.", selectedGene())))
+    #   validate(need(nrow(gg2$edges) <= 50, sprintf("Network too large (%s edges) for the gene '%s'; maximum number of edges to show is 50.", nrow(edges), selectedGene())))
+    #   
+    #   nodes <- gg2$nodes %>% 
+    #     select(id) %>% 
+    #     left_join(genesForNetwork, by='id') %>% 
+    #     select(gene, id, label) %>% 
+    #     dplyr::mutate(group=ifelse(label %in% targetManifest$Gene, "target", "other")) %>% 
+    #     dplyr::mutate(group=ifelse(label == selectedGene(), "selected", group))
+    #   
+    #   n <- visNetwork(nodes, gg2$edges) %>% 
+    #     visPhysics(solver="forceAtlas2Based", stabilization = TRUE) %>% 
+    #     visEdges(color='black') %>% 
+    #     visLegend() %>% 
+    #     visGroups(groupname='selected', color='green') %>% 
+    #     visGroups(groupname='target', color='#97C1FC') %>% 
+    #     visGroups(groupname='other', color='#FFD58F')
+    #   
+    #   # if (nrow(edges) <=10) {
+    #   #   n <- n %>% visIgraphLayout()
+    #   # }
+    #   
+    #   n
+    # })
+    # 
+    # output$edgeTable <- DT::renderDataTable(edges()$edges,
+    #                                         options=list(lengthChange=FALSE, pageLength=5, dom="tp"))
 
-    output$lillyDrugability <- renderPlot({
-      selGene <- selectedGene()
-      
-      tmp <- druggabilityData %>%
-        filter(GENE_SYMBOL == selGene)
-      
-      if (nrow(tmp) == 0) {
-        tmp <- data_frame(GENE_SYMBOL=selGene, 
-                          Lilly_DrugEBIlity_Consensus_Score='unk',
-                          `Lilly_GW_Druggability_Structure-based`='unk')
-      }
-      tmp <- tmp %>%
-        select(GENE_SYMBOL, 
-               `Consensus Score`=Lilly_DrugEBIlity_Consensus_Score,
-               `Structure-based Score`=`Lilly_GW_Druggability_Structure-based`) %>% 
-        top_n(1) %>% 
-        tidyr::gather(key = 'type', value = 'score',
-                      c(`Consensus Score`,
-                      `Structure-based Score`)) %>% 
-        mutate(score=factor(score, levels=c("unk", "0", "1", "2", "3")))
-      
-      validate(need(nrow(tmp) > 0, "No data to display."))
-      
-      tmp$Center <- NA
-      ggplot(tmp, aes(x=type, y=Center)) + 
-        facet_wrap( ~ type, scales="free", ncol=5) +
-        geom_tile(aes(fill=score)) + 
-        scale_fill_manual(values=lillyStatusColors, drop = FALSE) + 
-        theme_bw() + 
-        theme(axis.text=element_blank(), axis.title=element_blank(),
-              axis.ticks=element_blank(), strip.text.y=element_text(angle=360),
-              strip.background=element_rect(fill="white"),
-              legend.position="bottom")
-    })
+    # output$lillyDrugability <- renderPlot({
+    #   selGene <- selectedGene()
+    #   
+    #   tmp <- druggabilityData %>%
+    #     filter(GENE_SYMBOL == selGene)
+    #   
+    #   if (nrow(tmp) == 0) {
+    #     tmp <- data_frame(GENE_SYMBOL=selGene, 
+    #                       Lilly_DrugEBIlity_Consensus_Score='unk',
+    #                       `Lilly_GW_Druggability_Structure-based`='unk')
+    #   }
+    #   tmp <- tmp %>%
+    #     select(GENE_SYMBOL, 
+    #            `Consensus Score`=Lilly_DrugEBIlity_Consensus_Score,
+    #            `Structure-based Score`=`Lilly_GW_Druggability_Structure-based`) %>% 
+    #     top_n(1) %>% 
+    #     tidyr::gather(key = 'type', value = 'score',
+    #                   c(`Consensus Score`,
+    #                   `Structure-based Score`)) %>% 
+    #     mutate(score=factor(score, levels=c("unk", "0", "1", "2", "3")))
+    #   
+    #   validate(need(nrow(tmp) > 0, "No data to display."))
+    #   
+    #   tmp$Center <- NA
+    #   ggplot(tmp, aes(x=type, y=Center)) + 
+    #     facet_wrap( ~ type, scales="free", ncol=5) +
+    #     geom_tile(aes(fill=score)) + 
+    #     scale_fill_manual(values=lillyStatusColors, drop = FALSE) + 
+    #     theme_bw() + 
+    #     theme(axis.text=element_blank(), axis.title=element_blank(),
+    #           axis.ticks=element_blank(), strip.text.y=element_text(angle=360),
+    #           strip.background=element_rect(fill="white"),
+    #           legend.position="bottom")
+    # })
 
     output$targetInfo <- renderUI({
       geneName <- selectedGene()
       
       ensGene <- filter(geneDF, Gene == geneName)$ensembl.gene[1]
       
-      geneList <- targetList %>% filter(Gene == geneName)
+      geneList <- targetListOrig %>% filter(gene_symbol == geneName)
       
       if (nrow(geneList) > 0) {
         ens <- paste(unique(geneList$ensembl.gene), collapse=",")
@@ -297,42 +298,42 @@ shinyServer(function(input, output, session) {
               )
     })
     
-    output$status <- renderPlot({
-      
-      geneName <- selectedGene()
-      tmp <- druggabilityData %>%
-        filter(GENE_SYMBOL == geneName)
-      
-      if (nrow(tmp) == 0) {
-        y <- rbind(tmp, rep('unknown', ncol(tmp)))
-        colnames(y) <- colnames(tmp)
-        y$GENE_SYMBOL <- geneName
-        tmp <- y
-      }
-
-      tmp <- tmp %>%
-        select(starts_with("status")) %>% 
-        top_n(1) %>% 
-        tidyr::gather(key = 'type', value = 'status', starts_with("status")) %>% 
-        mutate(status=factor(status, levels=c("good", "medium", "bad", "unknown"), ordered=TRUE))
-      
-      validate(need(nrow(tmp) > 0, "No data to display."))
-      
-      tmp$type <- forcats::fct_recode(tmp$type, `Known Ligands`="status_known_ligands", 
-                                      `Crystal Structures`="status_crystal_structure", 
-                                      Pocket="status_pocket", Assays="status_assays", 
-                                      `In vivo`="status_in_vivo_work")
-      tmp$Center <- NA
-      ggplot(tmp, aes(x=type, y=Center)) + 
-        facet_wrap( ~ type, scales="free", ncol=5) +
-        geom_tile(aes(fill=status)) + 
-        scale_fill_manual(values=oddiStatusColors, drop = FALSE) + 
-        theme_bw() + 
-        theme(axis.text=element_blank(), axis.title=element_blank(),
-              axis.ticks=element_blank(), strip.text.y=element_text(angle=360),
-              strip.background=element_rect(fill="white"),
-              legend.position="bottom")
-    })
+    # output$status <- renderPlot({
+    #   
+    #   geneName <- selectedGene()
+    #   tmp <- druggabilityData %>%
+    #     filter(GENE_SYMBOL == geneName)
+    #   
+    #   if (nrow(tmp) == 0) {
+    #     y <- rbind(tmp, rep('unknown', ncol(tmp)))
+    #     colnames(y) <- colnames(tmp)
+    #     y$GENE_SYMBOL <- geneName
+    #     tmp <- y
+    #   }
+    # 
+    #   tmp <- tmp %>%
+    #     select(starts_with("status")) %>% 
+    #     top_n(1) %>% 
+    #     tidyr::gather(key = 'type', value = 'status', starts_with("status")) %>% 
+    #     mutate(status=factor(status, levels=c("good", "medium", "bad", "unknown"), ordered=TRUE))
+    #   
+    #   validate(need(nrow(tmp) > 0, "No data to display."))
+    #   
+    #   tmp$type <- forcats::fct_recode(tmp$type, `Known Ligands`="status_known_ligands", 
+    #                                   `Crystal Structures`="status_crystal_structure", 
+    #                                   Pocket="status_pocket", Assays="status_assays", 
+    #                                   `In vivo`="status_in_vivo_work")
+    #   tmp$Center <- NA
+    #   ggplot(tmp, aes(x=type, y=Center)) + 
+    #     facet_wrap( ~ type, scales="free", ncol=5) +
+    #     geom_tile(aes(fill=status)) + 
+    #     scale_fill_manual(values=oddiStatusColors, drop = FALSE) + 
+    #     theme_bw() + 
+    #     theme(axis.text=element_blank(), axis.title=element_blank(),
+    #           axis.ticks=element_blank(), strip.text.y=element_text(angle=360),
+    #           strip.background=element_rect(fill="white"),
+    #           legend.position="bottom")
+    # })
 
     output$selectGeneBox <- renderUI({
       selectizeInput('inputSelectedGene', label='Gene Symbol', multiple=FALSE,
@@ -367,12 +368,13 @@ shinyServer(function(input, output, session) {
     
     output$video <- renderUI({
       geneName <- selectedGene()
-      geneList <- targetList %>% filter(Gene == geneName) %>% select(Center) %>% top_n(1)
+      geneList <- targetListOrig %>% filter(Gene == geneName) %>% 
+        dplyr::select(group) %>% top_n(1)
       
-      validate(need(geneList$Center %in% names(vids), sprintf("No video from %s.", geneList$Center)))
+      validate(need(geneList$group %in% names(vids), sprintf("No video from %s.", geneList$Center)))
 
       HTML(sprintf('<a href="%s">Video</a>', 
-                   vids[[geneList$Center]]))
+                   vids[[geneList$group]]))
       
       # HTML(sprintf('<video height="250" controls><source src="%s" type="video/mp4"></video>', 
       #              vids[[geneList$Center]]))

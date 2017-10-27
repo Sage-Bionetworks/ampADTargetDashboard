@@ -1,10 +1,3 @@
-
-# This is the user-interface definition of a Shiny web application.
-# You can find out more about building applications with Shiny here:
-#
-# http://shiny.rstudio.com
-#
-
 library(shinydashboard)
 library(visNetwork)
 library(shinyBS)
@@ -34,7 +27,7 @@ dashboardPage(
                   dropdownMenuOutput("notificationMenu")),
   sidebar,
   # body
-
+  
   dashboardBody(
     
     useShinyjs(),
@@ -67,14 +60,23 @@ dashboardPage(
               
               # Boxes need to be put in a row (or column)
               fluidRow(
-                
-                       box(actionButton('targetlist', 'Back to Target List',
-                                        icon("paper-plane"), 
-                                        style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
-                           width=NULL)
+                box(actionButton('targetlist', 'Back to Target List',
+                                 icon("paper-plane"), 
+                                 style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                    width=NULL)
               ),
+              # fluidRow(
+              #   box(title=tagList("Target overview",
+              #                     tipify(icon("question-sign", lib="glyphicon"), "Annotations associated with this gene from Gene Ontology")),
+              #       solidHeader=FALSE, status="primary",
+              #       width=12, collapsible = TRUE, collapsed = FALSE,
+              #       tags$table(class="table table-condensed",
+              #                  tags$tr(
+              #                    tags$td(uiOutput('targetInfo'), style="width: '33%'"),
+              #                    tags$td(DT::dataTableOutput('gomf')),
+              #                    tags$td(DT::dataTableOutput('reactome')))))
+              # ),
               fluidRow(
-                
                 box(title=tagList("Target overview",
                                   tipify(icon("question-sign", lib="glyphicon"), "Annotations associated with this gene from Gene Ontology")),
                     solidHeader=FALSE, status="primary",
@@ -116,7 +118,7 @@ dashboardPage(
                                          title="Availability of mouse models for the selected gene from the International Mouse Strain Resource (IMSR).")),
                     solidHeader=FALSE, collapsible = TRUE, collapsed = FALSE,
                     status="success", width=4,
-                    DT::dataTableOutput("ISMR"))
+                    DT::dataTableOutput("IMSR"))
               )
       ),
       tabItem(tabName = "help",
