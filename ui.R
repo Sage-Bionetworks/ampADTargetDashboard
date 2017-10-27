@@ -65,52 +65,83 @@ dashboardPage(
                                  style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
                     width=NULL)
               ),
+
               # fluidRow(
               #   box(title=tagList("Target overview",
               #                     tipify(icon("question-sign", lib="glyphicon"), "Annotations associated with this gene from Gene Ontology")),
               #       solidHeader=FALSE, status="primary",
               #       width=12, collapsible = TRUE, collapsed = FALSE,
-              #       tags$table(class="table table-condensed",
+              #       tags$table(class="table table-condensed", style='table-layout: "fixed"',
               #                  tags$tr(
               #                    tags$td(uiOutput('targetInfo'), style="width: '33%'"),
               #                    tags$td(DT::dataTableOutput('gomf')),
               #                    tags$td(DT::dataTableOutput('reactome')))))
               # ),
+               
               fluidRow(
                 box(title=tagList("Target overview",
                                   tipify(icon("question-sign", lib="glyphicon"), "Annotations associated with this gene from Gene Ontology")),
                     solidHeader=FALSE, status="primary",
-                    width=4, collapsible = TRUE, collapsed = FALSE,
-                    uiOutput('targetInfo')
-                ),
-                box(title=tagList("Gene Ontology annotations",
-                                  tipify(icon("question-sign", lib="glyphicon"),
-                                         "Annotations associated with this gene from Gene Ontology")),
-                    solidHeader=FALSE, status="primary",
-                    width=4, collapsible = TRUE, collapsed = FALSE,
-                    DT::dataTableOutput('gomf')
-                ),
-                box(title=tagList("Biological pathways",
-                                  tipify(icon("question-sign", lib="glyphicon"), "Curated biological pathways that this gene is involved with.")),
-                    solidHeader=FALSE, status="primary",
-                    width=4, collapsible = TRUE, collapsed = FALSE,
-                    DT::dataTableOutput('reactome'))
+                    width=12, collapsible = TRUE, collapsed = FALSE,
+                    splitLayout(cellArgs = list(style = "padding: 3px"),
+                                uiOutput('targetInfo'),
+                                tagList(tags$h3("Gene Ontology"), DT::dataTableOutput('gomf')),
+                                tagList(tags$h3("Reactome Pathways"), DT::dataTableOutput('reactome')))
+                    )
               ),
               
+              # fluidRow(
+              #   box(title=tagList("Target overview",
+              #                     tipify(icon("question-sign", lib="glyphicon"), "Annotations associated with this gene from Gene Ontology")),
+              #       solidHeader=FALSE, status="primary",
+              #       width=4, collapsible = TRUE, collapsed = FALSE,
+              #       uiOutput('targetInfo')
+              #   ),
+              #   box(title=tagList("Gene Ontology annotations",
+              #                     tipify(icon("question-sign", lib="glyphicon"),
+              #                            "Annotations associated with this gene from Gene Ontology")),
+              #       solidHeader=FALSE, status="primary",
+              #       width=4, collapsible = TRUE, collapsed = FALSE,
+              #       DT::dataTableOutput('gomf')
+              #   ),
+              #   box(title=tagList("Biological pathways",
+              #                     tipify(icon("question-sign", lib="glyphicon"), "Curated biological pathways that this gene is involved with.")),
+              #       solidHeader=FALSE, status="primary",
+              #       width=4, collapsible = TRUE, collapsed = FALSE,
+              #       DT::dataTableOutput('reactome'))
+              # ),
+              
               fluidRow(
-                box(title=tagList("Case-Control Differential Expression", 
+                box(title=tagList("Differential Expression", 
                                   tipify(icon("question-sign", lib="glyphicon"),
                                          title="Differential gene expression of target genes between individuals with AD and no cognitive impairment (NCI).")),
                     solidHeader=FALSE, collapsible = TRUE, collapsed = TRUE,
-                    status="danger", width=4, 
-                    plotOutput("expression")),
-                box(title=tagList("Expression Forest Plot", 
-                                  tipify(icon("question-sign", lib="glyphicon"),
-                                         title="Forest plot of 95% confidence intervals around the log fold change across studies and comparison models.")),
-                    solidHeader=FALSE, collapsible = TRUE, collapsed = TRUE,
-                    status="danger", width=8,
-                    uiOutput('selectForestPlot'),
-                    plotOutput("forest"))),
+                    status="danger", width=12, 
+                    splitLayout(cellWidths = c("25%", "75%"),
+                                cellArgs = list(style = "padding: 3px"),
+                                tagList(h3("Differential Expression"), 
+                                        plotOutput("expression")),
+                                tagList(h3("Log fold change forest plot"), 
+                                        uiOutput('selectForestPlot'), 
+                                        plotOutput("forest")))
+                    )
+                ),
+              
+              # fluidRow(
+              #   box(title=tagList("Case-Control Differential Expression", 
+              #                     tipify(icon("question-sign", lib="glyphicon"),
+              #                            title="Differential gene expression of target genes between individuals with AD and no cognitive impairment (NCI).")),
+              #       solidHeader=FALSE, collapsible = TRUE, collapsed = TRUE,
+              #       status="danger", width=4, 
+              #       plotOutput("expression")),
+              #   box(title=tagList("Expression Forest Plot", 
+              #                     tipify(icon("question-sign", lib="glyphicon"),
+              #                            title="Forest plot of 95% confidence intervals around the log fold change across studies and comparison models.")),
+              #       solidHeader=FALSE, collapsible = TRUE, collapsed = TRUE,
+              #       status="danger", width=8,
+              #       uiOutput('selectForestPlot'),
+              #       plotOutput("forest"))),
+
               fluidRow(
                 box(title=tagList("Mouse model systems",
                                   tipify(icon("question-sign",

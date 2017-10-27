@@ -270,6 +270,13 @@ shinyServer(function(input, output, session) {
     #           legend.position="bottom")
     # })
 
+    
+    targetInfoValues <- reactiveValues(summary=NULL)
+    
+    output$targetInfoSummary <- reactive({
+      targetInfoValues$summary
+    })
+    
     output$targetInfo <- renderUI({
       geneName <- selectedGene()
       
@@ -288,13 +295,16 @@ shinyServer(function(input, output, session) {
       
       res <- mygene::getGene(ensGene, fields = c('name', 'summary'))[[1]]
       
+      targetInfoValues$summary <- res$summary
+      
       tagList(tags$h3(tags$a(href=sprintf("http://www.genenames.org/cgi-bin/gene_search?search=%s", geneName),
                              target="blank",geneName),
                       sprintf("(%s)", res$name)),
               tags$h4(tags$a(href=sprintf('https://www.targetvalidation.org/target/%s', ens), target="blank", ens),
                       "(Open Targets Platform)"),
               tags$h4(sprintf("Nominated by: %s", centers)),
-              tags$p(sprintf("Summary: %s", res$summary))
+              wellPanel(tags$p(sprintf("Summary: %s", res$summary),
+                               style="white-space:pre-wrap;"))
               )
     })
     
