@@ -82,7 +82,7 @@ dashboardPage(
                 box(title=tagList("Target overview",
                                   tipify(icon("question-sign", lib="glyphicon"), "Annotations associated with this gene from Gene Ontology")),
                     solidHeader=FALSE, status="primary",
-                    width=12, collapsible = TRUE, collapsed = FALSE,
+                    width=12, collapsible = TRUE, collapsed = TRUE,
                     splitLayout(cellArgs = list(style = "padding: 3px"),
                                 uiOutput('targetInfo'),
                                 tagList(tags$h3("Gene Ontology"), DT::dataTableOutput('gomf')),
@@ -115,18 +115,18 @@ dashboardPage(
                 box(title=tagList("Differential Expression", 
                                   tipify(icon("question-sign", lib="glyphicon"),
                                          title="Differential gene expression of target genes between individuals with AD and no cognitive impairment (NCI).")),
-                    solidHeader=FALSE, collapsible = TRUE, collapsed = TRUE,
+                    solidHeader=FALSE, collapsible = TRUE, collapsed = FALSE,
                     status="danger", width=12, 
-                    splitLayout(cellWidths = c("25%", "75%"),
-                                cellArgs = list(style = "padding: 3px"),
+                    splitLayout(cellWidths = c("60%", "40%"),
+                                cellArgs = list(style = "padding: 2px"),
                                 tagList(h3("Volcano Plot"),
                                         uiOutput("volcanoSelect"),
-                                        plotOutput("volcano")),
+                                        plotlyOutput("volcano", width="95%")),
                                 tagList(h3("Log fold change forest plot"), 
                                         uiOutput('forestSelect'), 
-                                        plotOutput("forest")))
-                    )
-                ),
+                                        plotOutput("forest", width="95%")))
+                )
+              ),
               
               # fluidRow(
               #   box(title=tagList("Case-Control Differential Expression", 

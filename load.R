@@ -43,6 +43,10 @@ geneDF <- geneExprData %>%
 dForFilter <- geneExprData %>% 
   dplyr::distinct(Study, Tissue, Model, Sex)
 
+dForFilter <- dForFilter %>% 
+  tidyr::unite("tissue_study", Tissue, Study, sep=", ", remove=FALSE) %>% 
+  tidyr::unite("model_sex", Model, Sex, sep=", ", remove=FALSE)
+
 IMSRId <- "syn11318727"
 IMSR <- synGet(IMSRId) %>% 
   getFileLocation() %>% 

@@ -368,37 +368,46 @@ shinyServer(function(input, output, session) {
       
       p <- ggplot(dForPlot)
       p <- p + geom_point(aes(y=logFC, x=study_tissue_sex))
-      p <- p + geom_pointrange(aes(ymax = CI.R, ymin = CI.L, y=logFC, x=study_tissue_sex, color=Study))
+      p <- p + geom_pointrange(aes(ymax = CI.R, ymin = CI.L, y=logFC, 
+                                   x=study_tissue_sex, color=Study))
       p <- p + geom_hline(yintercept = 0, linetype = 2)
       p <- p + coord_flip()
       p <- p + theme_minimal()
+      p <- p + theme(axis.text=element_text(size=12), 
+                     axis.title=element_text(size=14))
+      p <- p + labs(x="Log Fold Change", y=NULL)
       p
     }) 
     
     output$volcanoSelect <- renderUI({
-      tagList(selectInput(inputId="Study", label="Study", 
-                          choices=dForFilter$Study, multiple = FALSE,
-                          selected="MAYO"),
-              selectInput(inputId="Tissue", label="Tissue", 
-                          choices=dForFilter$Tissue, multiple = FALSE,
-                          selected="CER"),
-              selectInput(inputId="Model", label="Model", 
-                          choices=dForFilter$Model, multiple = FALSE,
-                          selected="Diagnosis"),
-              selectInput(inputId="Sex", label="Sex", 
-                          choices=dForFilter$Sex, multiple = FALSE,
-                          selected="Males and Females"))
-    })
+      splitLayout(cellWidths=c("30%", "70%"),
+                  cellArgs = list(style = "padding: 2px"),
+                  selectInput(inputId="Tissue", label="Tissue",
+                              choices=unique(dForFilter$tissue_study), multiple = FALSE,
+                              selected="CER, MAYO"),
+                  selectInput(inputId="Model", label="Model", width="50%",
+                              choices=unique(dForFilter$model_sex), multiple = FALSE,
+                              selected="Diagnosis, Males and Females"))
+      })
     
     output$volcano <- renderPlotly({
       
-      params <- data.frame(Study=input$Study, Tissue=input$Tissue,
-                           Model=input$Model, Sex=input$Sex)
+      geneName <- selectedGene()
       
+      params <- data.frame(tissue_study=input$Tissue, 
+                           model_sex=input$Model) %>% 
+        separate(tissue_study, into=c("Tissue", "Study"), sep=", ") %>% 
+        separate(model_sex, into=c("Model", "Sex"), sep=", ")
+        
       dForPlot <- inner_join(geneExprData, params)
+      dIsSelected <- dForPlot %>% filter(hgnc_symbol == geneName)
       
       p <- ggplot(dForPlot)
       p <- p + geom_point(aes(x=logFC, y=-log10(adj.P.Val), label=hgnc_symbol), alpha=(1/3))
+      p <- p + geom_point(aes(x=logFC, y=-log10(adj.P.Val), label=hgnc_symbol), 
+                          data=dIsSelected, shape=21, color="red", fill="white", 
+                          size=1, stroke=2)
+      
       p <- p + theme_minimal()
       ggplotly(p) %>% config(displayModeBar = F)
     })
