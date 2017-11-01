@@ -270,6 +270,13 @@ shinyServer(function(input, output, session) {
     #           legend.position="bottom")
     # })
 
+    
+    targetInfoValues <- reactiveValues(summary=NULL)
+    
+    output$targetInfoSummary <- reactive({
+      targetInfoValues$summary
+    })
+    
     output$targetInfo <- renderUI({
       geneName <- selectedGene()
       
@@ -288,13 +295,16 @@ shinyServer(function(input, output, session) {
       
       res <- mygene::getGene(ensGene, fields = c('name', 'summary'))[[1]]
       
+      targetInfoValues$summary <- res$summary
+      
       tagList(tags$h3(tags$a(href=sprintf("http://www.genenames.org/cgi-bin/gene_search?search=%s", geneName),
                              target="blank",geneName),
                       sprintf("(%s)", res$name)),
               tags$h4(tags$a(href=sprintf('https://www.targetvalidation.org/target/%s', ens), target="blank", ens),
                       "(Open Targets Platform)"),
               tags$h4(sprintf("Nominated by: %s", centers)),
-              tags$p(sprintf("Summary: %s", res$summary))
+              wellPanel(tags$p(sprintf("Summary: %s", res$summary),
+                               style="white-space:pre-wrap;"))
               )
     })
     
@@ -342,29 +352,82 @@ shinyServer(function(input, output, session) {
                      options=list(highlight=TRUE, openOnFocus=FALSE, 
                                   closeAfterSelect=TRUE, selectOnTab=TRUE))
     })
-    
-    output$selectForestPlot <- renderUI({
-      selectInput('forestModel', label='Model', multiple=FALSE, 
-                  choices=unique(dForFilter$Model), selected="Diagnosis",
-                  width="75%")
-    })
-    
-    output$forest <- renderPlot({
+  
+    output$de <- renderText({
+      
       params <- data.frame(hgnc_symbol=selectedGene(),
-                           Model=input$forestModel)
+                           tissue_study=input$Tissue, 
+                           model_sex=input$Model) %>% 
+        separate(tissue_study, into=c("Tissue", "Study"), sep=", ") %>% 
+        separate(model_sex, into=c("Model", "Sex"), sep=", ")
+      
+      dForPlot <- inner_join(geneExprData, params)
+      isDE <- ifelse(dForPlot$adj.P.Val < 0.05, "is", "is not")
+      
+      glue::glue("{gene} {isDE} differentially expressed (log fold change = {lfc}; adjusted p-value = {pval}) in the {tissue} from {study} when comparing {model} in {sex}.", 
+                 gene=params$hgnc_symbol, isDE=isDE, lfc=round(dForPlot$logFC, 3), pval=round(dForPlot$adj.P.Val, 3),
+                 tissue=params$Tissue, model=params$Model, sex=params$Sex, study=params$Study)
+
+    })
+    output$forest <- renderPlot({
+      params <- data.frame(hgnc_symbol=selectedGene(), 
+                           model_sex=input$Model) %>% 
+        separate(model_sex, into=c("Model", "Sex"), sep=", ") %>% 
+        select(-Sex)
       
       dForPlot <- inner_join(geneExprData, params) %>% 
         mutate(study_tissue_sex=paste(Study, Tissue, Sex))
       
       p <- ggplot(dForPlot)
       p <- p + geom_point(aes(y=logFC, x=study_tissue_sex))
-      p <- p + geom_pointrange(aes(ymax = CI.R, ymin = CI.L, y=logFC, x=study_tissue_sex, color=Study))
+      p <- p + geom_pointrange(aes(ymax = CI.R, ymin = CI.L, y=logFC, 
+                                   x=study_tissue_sex, color=Study))
       p <- p + geom_hline(yintercept = 0, linetype = 2)
       p <- p + coord_flip()
       p <- p + theme_minimal()
+      p <- p + theme(axis.text=element_text(size=12), 
+                     axis.title=element_text(size=14))
+      p <- p + labs(x="Log Fold Change", y=NULL)
       p
     }) 
     
+    output$volcanoSelect <- renderUI({
+      tagList(
+        div(style="display: inline-block;vertical-align:top; width: 150px;",
+            selectInput(inputId="Tissue", label="Tissue",
+                        choices=tissueStudySelections, multiple = FALSE,
+                        selected="TCX, MAYO")),
+        div(style="display: inline-block;vertical-align:top; width: 25px;",HTML("<br>")),
+        div(style="display: inline-block;vertical-align:top; width: 250px;",
+            selectInput(inputId="Model", label="Model",
+                        choices=modelSexSelections, multiple = FALSE,
+                        selected="Diagnosis, Males and Females"))
+      )
+    
+    })
+    
+    
+    output$volcano <- renderPlotly({
+      
+      geneName <- selectedGene()
+      
+      params <- data.frame(tissue_study=input$Tissue, 
+                           model_sex=input$Model) %>% 
+        separate(tissue_study, into=c("Tissue", "Study"), sep=", ") %>% 
+        separate(model_sex, into=c("Model", "Sex"), sep=", ")
+        
+      dForPlot <- inner_join(geneExprData, params)
+      dIsSelected <- dForPlot %>% filter(hgnc_symbol == geneName)
+      
+      p <- ggplot(dForPlot)
+      p <- p + geom_point(aes(x=logFC, y=-log10(adj.P.Val), label=hgnc_symbol), alpha=(1/3))
+      p <- p + geom_point(aes(x=logFC, y=-log10(adj.P.Val), label=hgnc_symbol), 
+                          data=dIsSelected, shape=21, color="red", fill="white", 
+                          size=1, stroke=2)
+      
+      p <- p + theme_minimal()
+      ggplotly(p) %>% config(displayModeBar = F)
+    })
     
     output$video <- renderUI({
       geneName <- selectedGene()

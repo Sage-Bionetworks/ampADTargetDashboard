@@ -102,8 +102,8 @@ geneExprData <- synGet(geneExprDataId) %>%
                                  `Males and Females`="ALL"),
          Model=stringr::str_replace(Model, "\\.", " + ")) 
 
-write_csv(geneExprData, "./geneExprData.csv")
-fGeneExprData <- synStore(File("./geneExprData.csv", 
+write_feather(geneExprData, "./geneExprData.feather")
+fGeneExprData <- synStore(File("./geneExprData.feather", 
                                parentId=wotFolderId), 
                           used=c(geneExprDataId), 
                           forceVersion=FALSE)
@@ -138,12 +138,14 @@ geneFPKMLong <- geneFPKM %>%
   tidyr::gather(sample, fpkm, 3:ncol(geneFPKM)) %>%
   left_join(geneCovariates %>% dplyr::select(Sampleid_batch, cogdx),
             by=c("sample"="Sampleid_batch")) %>%
-  dplyr::filter(!is.na(cogdx), !is.na(hgnc_symbol)) %>% 
+  dplyr::filter(!is.na(cogdx), !is.na(hgnc_symbol))
+
+geneFPKMLong <- geneFPKMLong %>% 
   mutate(cogdx=forcats::fct_recode(geneFPKMLong$cogdx, NCI='1', AD='4')) %>% 
   dplyr::rename(`Cognitive Diagnosis`=cogdx)
 
-write_csv(geneFPKMLong, "./geneFPKMLong.csv")
-fGeneFPKMLong <- synStore(File("./geneFPKMLong.csv", 
+write_feather(geneFPKMLong, "./geneFPKMLong.feather")
+fGeneFPKMLong <- synStore(File("./geneFPKMLong.feather", 
                                parentId=wotFolderId), 
                           used=c(geneFPKMId, geneCovariatesId), 
                           forceVersion=FALSE)
