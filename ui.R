@@ -51,7 +51,7 @@ dashboardPage(
                                        actionButton('selectGeneBoxButton', 'Go')),
                               tabPanel("Nominated Target Genes", id="nominatedTargets",
                                        includeMarkdown('nominatedtargetsinfo.md'),
-                                       DT::dataTableOutput('targetlist', width='100%'))
+                                       DT::dataTableOutput('targetlist', width='75%'))
                               )
                 ),
                 column(width=1))
@@ -112,18 +112,18 @@ dashboardPage(
               # ),
               
               fluidRow(
-                box(title=tagList("Differential Expression", 
+                box(title=tagList("RNA-Seq Differential Expression", 
                                   tipify(icon("question-sign", lib="glyphicon"),
-                                         title="Differential gene expression of target genes between individuals with AD and no cognitive impairment (NCI).")),
+                                         title="Differential gene expression of target genes.")),
                     solidHeader=FALSE, collapsible = TRUE, collapsed = FALSE,
                     status="danger", width=12, 
+                    uiOutput("volcanoSelect", width="100%"),
+                    textOutput("de"),
                     splitLayout(cellWidths = c("60%", "40%"),
                                 cellArgs = list(style = "padding: 2px"),
                                 tagList(h3("Volcano Plot"),
-                                        uiOutput("volcanoSelect"),
                                         plotlyOutput("volcano", width="95%")),
                                 tagList(h3("Log fold change forest plot"), 
-                                        uiOutput('forestSelect'), 
                                         plotOutput("forest", width="95%")))
                 )
               ),

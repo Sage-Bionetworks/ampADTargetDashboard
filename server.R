@@ -352,16 +352,28 @@ shinyServer(function(input, output, session) {
                      options=list(highlight=TRUE, openOnFocus=FALSE, 
                                   closeAfterSelect=TRUE, selectOnTab=TRUE))
     })
-    
-    output$forestSelect <- renderUI({
-      selectInput('forestModel', label='Model', multiple=FALSE, 
-                  choices=unique(dForFilter$Model), selected="Diagnosis",
-                  width="75%")
-    })
-    
-    output$forest <- renderPlot({
+  
+    output$de <- renderText({
+      
       params <- data.frame(hgnc_symbol=selectedGene(),
-                           Model=input$forestModel)
+                           tissue_study=input$Tissue, 
+                           model_sex=input$Model) %>% 
+        separate(tissue_study, into=c("Tissue", "Study"), sep=", ") %>% 
+        separate(model_sex, into=c("Model", "Sex"), sep=", ")
+      
+      dForPlot <- inner_join(geneExprData, params)
+      isDE <- ifelse(dForPlot$adj.P.Val < 0.05, "is", "is not")
+      
+      glue::glue("{gene} {isDE} differentially expressed (log fold change = {lfc}; adjusted p-value = {pval}) in the {tissue} from {study} when comparing {model} in {sex}.", 
+                 gene=params$hgnc_symbol, isDE=isDE, lfc=round(dForPlot$logFC, 3), pval=round(dForPlot$adj.P.Val, 3),
+                 tissue=params$Tissue, model=params$Model, sex=params$Sex, study=params$Study)
+
+    })
+    output$forest <- renderPlot({
+      params <- data.frame(hgnc_symbol=selectedGene(), 
+                           model_sex=input$Model) %>% 
+        separate(model_sex, into=c("Model", "Sex"), sep=", ") %>% 
+        select(-Sex)
       
       dForPlot <- inner_join(geneExprData, params) %>% 
         mutate(study_tissue_sex=paste(Study, Tissue, Sex))
@@ -380,15 +392,20 @@ shinyServer(function(input, output, session) {
     }) 
     
     output$volcanoSelect <- renderUI({
-      splitLayout(cellWidths=c("30%", "70%"),
-                  cellArgs = list(style = "padding: 2px"),
-                  selectInput(inputId="Tissue", label="Tissue",
-                              choices=unique(dForFilter$tissue_study), multiple = FALSE,
-                              selected="CER, MAYO"),
-                  selectInput(inputId="Model", label="Model", width="50%",
-                              choices=unique(dForFilter$model_sex), multiple = FALSE,
-                              selected="Diagnosis, Males and Females"))
-      })
+      tagList(
+        div(style="display: inline-block;vertical-align:top; width: 150px;",
+            selectInput(inputId="Tissue", label="Tissue",
+                        choices=tissueStudySelections, multiple = FALSE,
+                        selected="TCX, MAYO")),
+        div(style="display: inline-block;vertical-align:top; width: 25px;",HTML("<br>")),
+        div(style="display: inline-block;vertical-align:top; width: 250px;",
+            selectInput(inputId="Model", label="Model",
+                        choices=modelSexSelections, multiple = FALSE,
+                        selected="Diagnosis, Males and Females"))
+      )
+    
+    })
+    
     
     output$volcano <- renderPlotly({
       
