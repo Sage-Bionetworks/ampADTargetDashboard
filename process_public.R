@@ -5,20 +5,22 @@ library(feather)
 synapseLogin()
 
 wotFolderId <- 'syn7525089'
-druggabilityDataId <- 'syn7555804'
-targetListOrigId <- "syn8656625"
-geneExprDataId <- 'syn11180450'
-IMSRId <- 'syn11149859'
-geneFPKMId <- "syn5581268"
-geneCovariatesId <- "syn5581227"
+druggabilityDataId <- 'syn11420932'
+targetListOrigId <- "syn11420934"
 
-druggabilityDataOutputFile <- "./druggabilityData.csv"
-targetListOutputFile <- "./targetList.csv"
-targetListDistinctOutputFile <- "./targetListDistinct.csv"
-targetManifestOutputFile <- "./targetManifest.csv"
-fGeneExprDataOutputFile <- "./geneExprData.feather"
-IMSROutputFile <- "./IMSR_processed.feather" 
-geneFPKMLongOutputFile <- "./geneFPKMLong.feather"
+# geneExprDataId <- 'syn11180450'
+# IMSRId <- 'syn11149859'
+# geneFPKMId <- "syn5581268"
+# geneCovariatesId <- "syn5581227"
+
+druggabilityDataOutputFile <- "./druggabilityData_IGAP.csv"
+targetListOutputFile <- "./targetList_IGAP.csv"
+targetListDistinctOutputFile <- "./targetListDistinct_IGAP.csv"
+targetManifestOutputFile <- "./targetManifest_GAP.csv"
+
+# fGeneExprDataOutputFile <- "./geneExprData.feather"
+# IMSROutputFile <- "./IMSR_processed.feather" 
+# geneFPKMLongOutputFile <- "./geneFPKMLong.feather"
 
 druggabilityData <- synGet(druggabilityDataId) %>% 
   getFileLocation() %>% 
@@ -103,62 +105,62 @@ fTargetManifest <- synStore(File(targetManifestOutputFile,
                                 used=c(fTargetListDistinct, fDrugData), 
                             forceVersion=FALSE)
 
-### Process gene expression (logfc and CI) data
-geneExprData <- synGet(geneExprDataId) %>% 
-  getFileLocation() %>%
-  read_tsv() %>%
-  filter(stringr::str_detect(Model, "Diagnosis")) %>%
-  rename(Sex=Gender) %>%
-  mutate(hgnc_symbol=ifelse(is.na(hgnc_symbol), ensembl_gene_id, hgnc_symbol),
-         Sex=forcats::fct_recode(Sex, Males="MALE",
-                                 Females="FEMALE",
-                                 `Males and Females`="ALL"),
-         Model=stringr::str_replace(Model, "\\.", " + ")) 
-
-write_feather(geneExprData, fGeneExprDataOutputFile)
-fGeneExprData <- synStore(File(fGeneExprDataOutputFile, 
-                               parentId=wotFolderId), 
-                          used=c(geneExprDataId), 
-                          forceVersion=FALSE)
-
-IMSR <- synGet(IMSRId) %>% 
-  getFileLocation() %>% 
-  readr::read_csv() %>% 
-  dplyr::select(`Strain ID`, `Strain/Stock`, Repository, `Gene Symbol`, URL) %>% 
-  mutate(`Gene Symbol`=toupper(`Gene Symbol`)) %>% 
-  mutate(`Strain/Stock`=stringr::str_c("<a href='", URL, "'>", `Strain/Stock`, "</a>"))
-
-write_feather(IMSR, IMSROutputFile)
-fIMSR <- synStore(File(IMSROutputFile, 
-                       parentId=wotFolderId), 
-                  used=c(IMSRId), 
-                  forceVersion=FALSE)
-
-geneFPKM <- synGet(geneFPKMId) %>% 
-  getFileLocation() %>% 
-  read_tsv()
-
-geneCovariates <- synGet(geneCovariatesId) %>% 
-  getFileLocation() %>% 
-  read_tsv() %>%
-  filter(cogdx %in% c(1, 4)) %>%
-  mutate(cogdx=factor(cogdx, ordered=TRUE))
-
-geneFPKMLong <- geneFPKM %>%
-  tidyr::gather(sample, fpkm, 3:ncol(geneFPKM)) %>%
-  left_join(geneCovariates %>% dplyr::select(Sampleid_batch, cogdx),
-            by=c("sample"="Sampleid_batch")) %>%
-  dplyr::filter(!is.na(cogdx), !is.na(hgnc_symbol))
-
-geneFPKMLong <- geneFPKMLong %>% 
-  mutate(cogdx=forcats::fct_recode(geneFPKMLong$cogdx, NCI='1', AD='4')) %>% 
-  dplyr::rename(`Cognitive Diagnosis`=cogdx)
-
-write_feather(geneFPKMLong, geneFPKMLongOutputFile)
-fGeneFPKMLong <- synStore(File(geneFPKMLongOutputFile, 
-                               parentId=wotFolderId), 
-                          used=c(geneFPKMId, geneCovariatesId), 
-                          forceVersion=FALSE)
+# ### Process gene expression (logfc and CI) data
+# geneExprData <- synGet(geneExprDataId) %>% 
+#   getFileLocation() %>%
+#   read_tsv() %>%
+#   filter(stringr::str_detect(Model, "Diagnosis")) %>%
+#   rename(Sex=Gender) %>%
+#   mutate(hgnc_symbol=ifelse(is.na(hgnc_symbol), ensembl_gene_id, hgnc_symbol),
+#          Sex=forcats::fct_recode(Sex, Males="MALE",
+#                                  Females="FEMALE",
+#                                  `Males and Females`="ALL"),
+#          Model=stringr::str_replace(Model, "\\.", " + ")) 
+# 
+# write_feather(geneExprData, fGeneExprDataOutputFile)
+# fGeneExprData <- synStore(File(fGeneExprDataOutputFile, 
+#                                parentId=wotFolderId), 
+#                           used=c(geneExprDataId), 
+#                           forceVersion=FALSE)
+# 
+# IMSR <- synGet(IMSRId) %>% 
+#   getFileLocation() %>% 
+#   readr::read_csv() %>% 
+#   dplyr::select(`Strain ID`, `Strain/Stock`, Repository, `Gene Symbol`, URL) %>% 
+#   mutate(`Gene Symbol`=toupper(`Gene Symbol`)) %>% 
+#   mutate(`Strain/Stock`=stringr::str_c("<a href='", URL, "'>", `Strain/Stock`, "</a>"))
+# 
+# write_feather(IMSR, IMSROutputFile)
+# fIMSR <- synStore(File(IMSROutputFile, 
+#                        parentId=wotFolderId), 
+#                   used=c(IMSRId), 
+#                   forceVersion=FALSE)
+# 
+# geneFPKM <- synGet(geneFPKMId) %>% 
+#   getFileLocation() %>% 
+#   read_tsv()
+# 
+# geneCovariates <- synGet(geneCovariatesId) %>% 
+#   getFileLocation() %>% 
+#   read_tsv() %>%
+#   filter(cogdx %in% c(1, 4)) %>%
+#   mutate(cogdx=factor(cogdx, ordered=TRUE))
+# 
+# geneFPKMLong <- geneFPKM %>%
+#   tidyr::gather(sample, fpkm, 3:ncol(geneFPKM)) %>%
+#   left_join(geneCovariates %>% dplyr::select(Sampleid_batch, cogdx),
+#             by=c("sample"="Sampleid_batch")) %>%
+#   dplyr::filter(!is.na(cogdx), !is.na(hgnc_symbol))
+# 
+# geneFPKMLong <- geneFPKMLong %>% 
+#   mutate(cogdx=forcats::fct_recode(geneFPKMLong$cogdx, NCI='1', AD='4')) %>% 
+#   dplyr::rename(`Cognitive Diagnosis`=cogdx)
+# 
+# write_feather(geneFPKMLong, geneFPKMLongOutputFile)
+# fGeneFPKMLong <- synStore(File(geneFPKMLongOutputFile, 
+#                                parentId=wotFolderId), 
+#                           used=c(geneFPKMId, geneCovariatesId), 
+#                           forceVersion=FALSE)
 
 # network <- fread(getFileLocation(synGet("syn7770770")),
 #                  data.table=FALSE)

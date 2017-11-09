@@ -42,7 +42,7 @@ dashboardPage(
       tabItem(tabName = "targetmanifest",
               fluidRow(
                 column(width=1),
-                column(width=10,
+                column(width=12,
                        includeMarkdown('welcome.md'),
                        tabBox(id='inputgene', width=NULL,
                               tabPanel("Gene Search", id="selectAGene",

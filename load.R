@@ -1,18 +1,30 @@
-druggabilityDataId <- "syn11318563"
+# Unreleased data
+# druggabilityDataId <- "syn11420935"
+# targetListOrigId <- "syn11421406"
+# targetListDistinctId <- "syn11421426"
+# targetManifestId <- "syn11318664"
+
+# Public data
+druggabilityDataId <- "syn11420935"
+targetListOrigId <- "syn8656625"
+targetListDistinctId <- "syn11318663"
+targetManifestId <- "syn11421445"
+
+geneExprDataId <- "syn11326321"
+fGeneFPKMLongId <- 'syn11327106'
+IMSRId <- "syn11420915"
+
 druggabilityData <- synGet(druggabilityDataId) %>% 
   getFileLocation() %>% read_csv()
 
-targetListOrigId <- "syn8656625"
 targetListOrig <- synGet(targetListOrigId) %>% 
   getFileLocation %>% 
   read_csv()
 
-targetListDistinctId <- "syn11318663"
 targetListDistinct <- synGet(targetListDistinctId) %>% 
   getFileLocation %>% 
   read_csv()
 
-targetManifestId <- "syn11318664"
 targetManifest <- synGet(targetManifestId) %>% 
   getFileLocation %>% 
   read_csv()
@@ -35,8 +47,6 @@ targetManifestTable <- targetManifest %>%
                                        c("green", "orange", "red", "grey"))) %>% 
   DT::formatStyle(columns = c(1, 2, 3), fontSize = '125%')
 
-
-geneExprDataId <- "syn11326321"
 geneExprData <- synGet(geneExprDataId) %>% 
   getFileLocation %>% 
   read_feather()
@@ -70,12 +80,10 @@ modelSexSelectionsDF <- dForFilter %>%
 modelSexSelections <- purrr::set_names(modelSexSelectionsDF$model_sex, 
                                        modelSexSelectionsDF$model_sex_pretty)
 
-IMSRId <- "syn11318727"
 IMSR <- synGet(IMSRId) %>% 
   getFileLocation() %>% 
-  read_csv()
+  read_feather()
 
-fGeneFPKMLongId <- 'syn11327106'
 geneFPKMLong <- synGet(fGeneFPKMLongId) %>% 
   getFileLocation() %>% 
   read_feather()

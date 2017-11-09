@@ -426,6 +426,8 @@ shinyServer(function(input, output, session) {
                           size=1, stroke=2)
       
       p <- p + theme_minimal()
+      p <- p + labs(x="Log Fold Change", y="-log10(Adjusted p-value)")
+      
       ggplotly(p) %>% config(displayModeBar = F)
     })
     
