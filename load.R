@@ -1,14 +1,17 @@
-# Unreleased data
-# druggabilityDataId <- "syn11420935"
-# targetListOrigId <- "syn11421406"
-# targetListDistinctId <- "syn11421426"
-# targetManifestId <- "syn11318664"
 
-# Public data
-druggabilityDataId <- "syn11420935"
-targetListOrigId <- "syn8656625"
-targetListDistinctId <- "syn11318663"
-targetManifestId <- "syn11421445"
+if (usePublic) {
+  # Public data
+  druggabilityDataId <- "syn11420935"
+  targetListOrigId <- "syn8656625"
+  targetListDistinctId <- "syn11318663"
+  targetManifestId <- "syn11421445"
+} else {
+  # Unreleased data
+  druggabilityDataId <- "syn11420935"
+  targetListOrigId <- "syn11421406"
+  targetListDistinctId <- "syn11421426"
+  targetManifestId <- "syn11318664"
+}
 
 geneExprDataId <- "syn11326321"
 fGeneFPKMLongId <- 'syn11327106'
