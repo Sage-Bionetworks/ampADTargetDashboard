@@ -7,18 +7,12 @@ synapseLogin()
 wotFolderId <- 'syn7525089'
 druggabilityDataId <- 'syn7555804'
 targetListOrigId <- "syn8656625"
-geneExprDataId <- 'syn11180450'
-IMSRId <- 'syn11149859'
-geneFPKMId <- "syn5581268"
-geneCovariatesId <- "syn5581227"
+
 
 druggabilityDataOutputFile <- "./druggabilityData.csv"
 targetListOutputFile <- "./targetList.csv"
 targetListDistinctOutputFile <- "./targetListDistinct.csv"
 targetManifestOutputFile <- "./targetManifest.csv"
-fGeneExprDataOutputFile <- "./geneExprData.feather"
-IMSROutputFile <- "./IMSR_processed.feather" 
-geneFPKMLongOutputFile <- "./geneFPKMLong.feather"
 
 druggabilityData <- synGet(druggabilityDataId) %>% 
   getFileLocation() %>% 
@@ -102,107 +96,3 @@ fTargetManifest <- synStore(File(targetManifestOutputFile,
                                      parentId=wotFolderId), 
                                 used=c(fTargetListDistinct, fDrugData), 
                             forceVersion=FALSE)
-
-### Process gene expression (logfc and CI) data
-geneExprData <- synGet(geneExprDataId) %>% 
-  getFileLocation() %>%
-  read_tsv() %>%
-  filter(stringr::str_detect(Model, "Diagnosis")) %>%
-  rename(Sex=Gender) %>%
-  mutate(hgnc_symbol=ifelse(is.na(hgnc_symbol), ensembl_gene_id, hgnc_symbol),
-         Sex=forcats::fct_recode(Sex, Males="MALE",
-                                 Females="FEMALE",
-                                 `Males and Females`="ALL"),
-         Model=stringr::str_replace(Model, "\\.", " + ")) 
-
-write_feather(geneExprData, fGeneExprDataOutputFile)
-fGeneExprData <- synStore(File(fGeneExprDataOutputFile, 
-                               parentId=wotFolderId), 
-                          used=c(geneExprDataId), 
-                          forceVersion=FALSE)
-
-IMSR <- synGet(IMSRId) %>% 
-  getFileLocation() %>% 
-  readr::read_csv() %>% 
-  dplyr::select(`Strain ID`, `Strain/Stock`, Repository, `Gene Symbol`, URL) %>% 
-  mutate(`Gene Symbol`=toupper(`Gene Symbol`)) %>% 
-  mutate(`Strain/Stock`=stringr::str_c("<a href='", URL, "'>", `Strain/Stock`, "</a>"))
-
-write_feather(IMSR, IMSROutputFile)
-fIMSR <- synStore(File(IMSROutputFile, 
-                       parentId=wotFolderId), 
-                  used=c(IMSRId), 
-                  forceVersion=FALSE)
-
-geneFPKM <- synGet(geneFPKMId) %>% 
-  getFileLocation() %>% 
-  read_tsv()
-
-geneCovariates <- synGet(geneCovariatesId) %>% 
-  getFileLocation() %>% 
-  read_tsv() %>%
-  filter(cogdx %in% c(1, 4)) %>%
-  mutate(cogdx=factor(cogdx, ordered=TRUE))
-
-geneFPKMLong <- geneFPKM %>%
-  tidyr::gather(sample, fpkm, 3:ncol(geneFPKM)) %>%
-  left_join(geneCovariates %>% dplyr::select(Sampleid_batch, cogdx),
-            by=c("sample"="Sampleid_batch")) %>%
-  dplyr::filter(!is.na(cogdx), !is.na(hgnc_symbol))
-
-geneFPKMLong <- geneFPKMLong %>% 
-  mutate(cogdx=forcats::fct_recode(geneFPKMLong$cogdx, NCI='1', AD='4')) %>% 
-  dplyr::rename(`Cognitive Diagnosis`=cogdx)
-
-write_feather(geneFPKMLong, geneFPKMLongOutputFile)
-fGeneFPKMLong <- synStore(File(geneFPKMLongOutputFile, 
-                               parentId=wotFolderId), 
-                          used=c(geneFPKMId, geneCovariatesId), 
-                          forceVersion=FALSE)
-
-# network <- fread(getFileLocation(synGet("syn7770770")),
-#                  data.table=FALSE)
-# 
-# genesForNetwork <- network %>%
-#   tidyr::gather(source, gene, var1, var2) %>%
-#   dplyr::select(gene) %>%
-#   mutate(id=gene) %>%
-#   distinct() %>%
-#   arrange(gene)
-# 
-# out <- queryMany(unique(genesForNetwork$gene),
-#                  scopes="ensembl.gene", fields="symbol", species="human",
-#                  returnall=TRUE, size=1)
-# 
-# res <- as.data.frame(out$response) %>% select(symbol, query)
-# 
-# genesForNetwork <- genesForNetwork %>%
-#   left_join(res, by=c('id'='query')) %>%
-#   mutate(label=ifelse(is.na(symbol), gene, symbol))
-# 
-# gg <- graph_from_data_frame(network %>% distinct())
-# 
-# gtexObj <- synGet('syn7542283')
-# 
-# gtex <- fread(getFileLocation(gtexObj), data.table=FALSE) %>%
-#   mutate(ensembl.gene=str_replace(Name, "\\..*", "")) %>%
-#   # dplyr::filter(ensembl.gene %in% c(genesForNetwork$gene,
-#   #                                   targetList$ensembl.gene)) %>%
-#   select(ensembl.gene, hgnc_symbol=Description, starts_with('Brain'))
-# 
-# gtex <- gtex %>%
-#   tidyr::gather(tissue, medianFPKM, 3:ncol(gtex)) %>%
-#   mutate(tissue=str_replace(tissue, "Brain - ", ""))
-# 
-# medianGTEx <- median(gtex$medianFPKM)
-# # 
-# nTargets <- targetListOrig %>% count(group)
-# 
-# save(ISMR, nTargets, network, targetList, targetListOrig,
-#      druggabilityData, targetManifest, targetListDistinct, genesForNetwork,
-#      gg, geneFPKMLong, gtex, medianGTEx, geneExprData, geneDF, dForFilter,
-#      file="./data2load.RData")
-# synStore(File("./data2load.RData", parentId="syn7525089"))
-# diffExprData <- synapseClient::synGet("syn11180450") %>% 
-#   synapseClient::getFileLocation() %>% 
-#   readr::read_csv()
