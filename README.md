@@ -22,6 +22,8 @@ A R Shiny dashboard of nominated gene targets with information about their genet
 
 ## Run
 
+Currently requires to be logged into Synapse to run in the browser. Requires modification to run locally. See [here](https://github.com/Sage-Bionetworks/SynapseShinyApp) for information on the required modifications.
+
 ```
 library(shiny)
 shiny::runGitHub('Sage-Bionetworks/WallOfTargets')
