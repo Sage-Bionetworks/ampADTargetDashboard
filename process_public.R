@@ -115,7 +115,7 @@ geneExprData <- synGet(geneExprDataId) %>%
          Sex=forcats::fct_recode(Sex, Males="MALE",
                                  Females="FEMALE",
                                  `Males and Females`="ALL"),
-         Model=stringr::str_replace(Model, "\\.", " + "))
+         Model=stringr::str_replace(Model, "\\.", " x "))
 
 write_feather(geneExprData, fGeneExprDataOutputFile)
 fGeneExprData <- synStore(File(fGeneExprDataOutputFile,
