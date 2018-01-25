@@ -90,3 +90,25 @@ IMSR <- synGet(IMSRId) %>%
 geneFPKMLong <- synGet(fGeneFPKMLongId) %>% 
   getFileLocation() %>% 
   read_feather()
+
+network <- readr::read_csv(synGet("syn11685347") %>% getFileLocation())
+
+network2 <- network %>% group_by(geneA_ensembl_gene_id, geneB_ensembl_gene_id,
+                                 geneA_external_gene_name, geneB_external_gene_name) %>% 
+  summarize(value=n_distinct(brainRegion)) %>% 
+  ungroup() %>% 
+  distinct() %>% 
+  filter(value > 1)
+
+
+genesForNetwork <- dplyr::bind_rows(network %>% 
+                                      select(gene=geneA_ensembl_gene_id, 
+                                             symbol=geneA_external_gene_name),
+                                    network %>% 
+                                      select(gene=geneB_ensembl_gene_id, 
+                                             symbol=geneB_external_gene_name)) %>% 
+  distinct() %>% 
+  mutate(id=gene, label=ifelse(is.na(symbol), gene, symbol))
+
+
+gg <- graph_from_data_frame(network2)

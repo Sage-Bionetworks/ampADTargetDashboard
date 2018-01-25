@@ -162,27 +162,7 @@ fGeneFPKMLong <- synStore(File(geneFPKMLongOutputFile,
                           used=c(geneFPKMId, geneCovariatesId),
                           forceVersion=FALSE)
 
-# network <- fread(getFileLocation(synGet("syn7770770")),
-#                  data.table=FALSE)
-# 
-# genesForNetwork <- network %>%
-#   tidyr::gather(source, gene, var1, var2) %>%
-#   dplyr::select(gene) %>%
-#   mutate(id=gene) %>%
-#   distinct() %>%
-#   arrange(gene)
-# 
-# out <- queryMany(unique(genesForNetwork$gene),
-#                  scopes="ensembl.gene", fields="symbol", species="human",
-#                  returnall=TRUE, size=1)
-# 
-# res <- as.data.frame(out$response) %>% select(symbol, query)
-# 
-# genesForNetwork <- genesForNetwork %>%
-#   left_join(res, by=c('id'='query')) %>%
-#   mutate(label=ifelse(is.na(symbol), gene, symbol))
-# 
-# gg <- graph_from_data_frame(network %>% distinct())
+
 # 
 # gtexObj <- synGet('syn7542283')
 # 
