@@ -13,7 +13,7 @@ library(shinyjs)
 library(plotly)
 library(feather)
 
-usePublic <- TRUE
+usePublic <- FALSE
 
 oddiStatusColors <- c("good"="#5e933f", "medium"="#ef7d0b", "bad"="#a30b0d", "unknown"="#a3a3a3")
 lillyStatusColors <- c("3"="#5e933f", "2"="yellow", "1"="#ef7d0b", "0"="#a30b0d", "NA"="#a3a3a3", "unk"="#a3a3a3")
