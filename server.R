@@ -13,8 +13,8 @@ shinyServer(function(input, output, session) {
   # 
   #   synapseLogin(sessionToken=input$cookie)
     synapseLogin()
-    withProgress(message = 'Loading data...',
-                 {source("load.R")})
+    # withProgress(message = 'Loading data...',
+    #              {source("load.R")})
     
     gene <- reactiveValues(geneName=NULL)
 
@@ -128,25 +128,25 @@ shinyServer(function(input, output, session) {
                                     href=url))
     })
 
-    # edges <- reactive({
-    #   ensGene <- filter(druggabilityData, GENE_SYMBOL== selectedGene())$ensembl.gene
-    #   
-    #   gg.neighbors <- ego(gg, 1, V(gg)[V(gg)$name %in% ensGene])
-    #   
-    #   if (length(gg.neighbors) < 1) {
-    #     # gg2 <- make_empty_graph(1)
-    #     # V(gg2)$name <- ensGene
-    #     # foo <- gg2
-    #     foo <- induced_subgraph(gg, vids = c())
-    #   } else {
-    #     gg.neighbors <- gg.neighbors[[1]]
-    #     foo <- induced_subgraph(gg, vids = gg.neighbors)
-    #   }
-    #   
-    #   foo %>%
-    #     toVisNetworkData()
-    #   
-    # })
+    edges <- reactive({
+      ensGene <- filter(genesForNetwork, symbol == selectedGene())$gene
+
+      gg.neighbors <- ego(gg, 1, V(gg)[V(gg)$name %in% ensGene])
+
+      if (length(gg.neighbors) < 1) {
+        # gg2 <- make_empty_graph(1)
+        # V(gg2)$name <- ensGene
+        # foo <- gg2
+        foo <- induced_subgraph(gg, vids = c())
+      } else {
+        gg.neighbors <- gg.neighbors[[1]]
+        foo <- induced_subgraph(gg, vids = gg.neighbors)
+      }
+
+      foo %>%
+        toVisNetworkData()
+
+    })
     
     # output$gtex <- renderPlot({
     #   
@@ -204,34 +204,34 @@ shinyServer(function(input, output, session) {
       p
     })
     
-    # output$network <- renderVisNetwork({
-    #   
-    #   gg2 <- edges()    
-    #   validate(need(nrow(gg2$edges) > 0, sprintf("No nodes for the gene '%s'.", selectedGene())))
-    #   validate(need(nrow(gg2$edges) <= 50, sprintf("Network too large (%s edges) for the gene '%s'; maximum number of edges to show is 50.", nrow(edges), selectedGene())))
-    #   
-    #   nodes <- gg2$nodes %>% 
-    #     select(id) %>% 
-    #     left_join(genesForNetwork, by='id') %>% 
-    #     select(gene, id, label) %>% 
-    #     dplyr::mutate(group=ifelse(label %in% targetManifest$Gene, "target", "other")) %>% 
-    #     dplyr::mutate(group=ifelse(label == selectedGene(), "selected", group))
-    #   
-    #   n <- visNetwork(nodes, gg2$edges) %>% 
-    #     visPhysics(solver="forceAtlas2Based", stabilization = TRUE) %>% 
-    #     visEdges(color='black') %>% 
-    #     visLegend() %>% 
-    #     visGroups(groupname='selected', color='green') %>% 
-    #     visGroups(groupname='target', color='#97C1FC') %>% 
-    #     visGroups(groupname='other', color='#FFD58F')
-    #   
-    #   # if (nrow(edges) <=10) {
-    #   #   n <- n %>% visIgraphLayout()
-    #   # }
-    #   
-    #   n
-    # })
-    # 
+    output$network <- renderVisNetwork({
+
+      gg2 <- edges()
+      validate(need(nrow(gg2$edges) > 0, sprintf("No nodes for the gene '%s'.", selectedGene())))
+      validate(need(nrow(gg2$edges) <= 75, sprintf("Network too large (%s edges) for the gene '%s'; maximum number of edges to show is 50.", nrow(edges), selectedGene())))
+
+      nodes <- gg2$nodes %>%
+        select(id) %>%
+        left_join(genesForNetwork, by='id') %>%
+        select(gene, id, label) %>%
+        dplyr::mutate(group=ifelse(label %in% targetManifest$Gene, "target", "other")) %>%
+        dplyr::mutate(group=ifelse(label == selectedGene(), "selected", group))
+
+      n <- visNetwork(nodes, gg2$edges) %>%
+        visPhysics(solver="forceAtlas2Based", stabilization = TRUE) %>%
+        visEdges(color='black') %>%
+        visLegend(width=0.1) %>%
+        visGroups(groupname='selected', color='green') %>%
+        visGroups(groupname='target', color='#97C1FC') %>%
+        visGroups(groupname='other', color='#FFD58F')
+
+      # if (nrow(edges) <=10) {
+      #   n <- n %>% visIgraphLayout()
+      # }
+
+      n
+    })
+     
     # output$edgeTable <- DT::renderDataTable(edges()$edges,
     #                                         options=list(lengthChange=FALSE, pageLength=5, dom="tp"))
 
