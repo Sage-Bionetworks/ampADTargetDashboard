@@ -128,6 +128,15 @@ dashboardPage(
                 )
               ),
               
+              fluidRow(
+                box(title=tagList("Gene Co-Expression Network",
+                                  tipify(icon("question-sign", lib="glyphicon"),
+                                         title="Co-expression networks from the ROSMAP study.")),
+                    solidHeader=FALSE, collapsible = TRUE, collapsed = FALSE,
+                    status="danger", width=12, 
+                    visNetworkOutput("network", height = "500px"))
+                
+              ),
               # fluidRow(
               #   box(title=tagList("Case-Control Differential Expression", 
               #                     tipify(icon("question-sign", lib="glyphicon"),
@@ -210,8 +219,3 @@ dashboardPage(
 #     status="danger", width=NULL, 
 #     DT::dataTableOutput("evidence"),
 #     htmlOutput('video')),
-# box(title=tagList("Gene Co-Expression Network",
-#                   tipify(icon("question-sign", lib="glyphicon"), 
-#                          title="Co-expression networks from the ROSMAP study.")),
-#     solidHeader=TRUE, collapsible = TRUE, collapsed = TRUE,
-#     status="danger", width=NULL, visNetworkOutput("network", height = "350px")),
