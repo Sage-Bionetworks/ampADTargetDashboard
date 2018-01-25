@@ -32,5 +32,3 @@ vids <- c("UFL-ISB-Mayo"="https://s3.amazonaws.com/static.synapse.org/kdaily/AMP
           "Broad-Rush"="https://s3.amazonaws.com/static.synapse.org/kdaily/AMP-AD/AMP-AD_ExperimentalValidationWGWebinar_101316.mp4",
           "Emory"="https://s3.amazonaws.com/static.synapse.org/kdaily/AMP-AD/AMP-AD_ExperimentalValidationWGWebinar_10616.mp4",
           "MSSM"="https://s3.amazonaws.com/static.synapse.org/kdaily/AMP-AD/AMP-AD_ExperimentalValidationWGWebinar_1473951893.mp4")
-
-source("load.R")

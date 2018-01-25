@@ -13,8 +13,8 @@ shinyServer(function(input, output, session) {
   # 
   #   synapseLogin(sessionToken=input$cookie)
     synapseLogin()
-    # withProgress(message = 'Loading data...',
-    #              {source("load.R")})
+    withProgress(message = 'Loading data...',
+                 {source("load.R")})
     
     gene <- reactiveValues(geneName=NULL)
 
