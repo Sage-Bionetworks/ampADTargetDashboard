@@ -22,8 +22,7 @@ fGeneExprDataOutputFile <- "./geneExprData.feather"
 IMSROutputFile <- "./IMSR_processed.feather"
 geneFPKMLongOutputFile <- "./geneFPKMLong.feather"
 
-druggabilityData <- synGet(druggabilityDataId) %>% 
-  getFileLocation() %>% 
+druggabilityData <- synGet(druggabilityDataId)$path %>% 
   read_csv() %>%
   select(-Center, -DDI_Interest, -some_number, -GENE_DESCRIPTION) %>%
   rename(ensembl.gene=ENSG) %>%
@@ -57,12 +56,11 @@ druggabilityData <- druggabilityData %>%
 write_csv(druggabilityData, druggabilityDataOutputFile)
 
 fDrugData <- synStore(File(druggabilityDataOutputFile, 
-                           parentId=wotFolderId), 
+                           parent=wotFolderId), 
                       used=druggabilityDataId, forceVersion=FALSE)
 
 ####### Process target list
-targetListOrig <- synGet(targetListOrigId) %>% 
-  getFileLocation %>% 
+targetListOrig <- synGet(targetListOrigId)$path %>% 
   read_csv()
 
 targetList <- targetListOrig %>%
@@ -71,7 +69,7 @@ targetList <- targetListOrig %>%
 write_csv(targetList, targetListOutputFile)
 
 fTargetList <- synStore(File(targetListOutputFile, 
-                             parentId=wotFolderId), 
+                             parent=wotFolderId), 
                         used=targetListOrigId, forceVersion=FALSE)
 
 targetListDistinct <- targetList %>%
@@ -86,7 +84,7 @@ targetListDistinct <- targetList %>%
 write_csv(targetList, targetListDistinctOutputFile)
 
 fTargetListDistinct <- synStore(File(targetListDistinctOutputFile, 
-                             parentId=wotFolderId), 
+                             parent=wotFolderId), 
                         used=fTargetList, forceVersion=FALSE)
 
 targetManifest <- targetListDistinct %>%
@@ -101,13 +99,12 @@ targetManifest <- targetListDistinct %>%
 write_csv(targetManifest, targetManifestOutputFile)
 
 fTargetManifest <- synStore(File(targetManifestOutputFile, 
-                                     parentId=wotFolderId), 
+                                     parent=wotFolderId), 
                                 used=c(fTargetListDistinct, fDrugData), 
                             forceVersion=FALSE)
 
 ### Process gene expression (logfc and CI) data
-geneExprData <- synGet(geneExprDataId) %>%
-  getFileLocation() %>%
+geneExprData <- synGet(geneExprDataId)$path %>%
   read_tsv() %>%
   filter(stringr::str_detect(Model, "Diagnosis")) %>%
   rename(Sex=Gender) %>%
@@ -119,12 +116,11 @@ geneExprData <- synGet(geneExprDataId) %>%
 
 write_feather(geneExprData, fGeneExprDataOutputFile)
 fGeneExprData <- synStore(File(fGeneExprDataOutputFile,
-                               parentId=wotFolderId),
+                               parent=wotFolderId),
                           used=c(geneExprDataId),
                           forceVersion=FALSE)
 
-IMSR <- synGet(IMSRId) %>%
-  getFileLocation() %>%
+IMSR <- synGet(IMSRId)$path %>%
   readr::read_csv() %>%
   dplyr::select(`Strain ID`, `Strain/Stock`, Repository, `Gene Symbol`, URL) %>%
   mutate(`Gene Symbol`=toupper(`Gene Symbol`)) %>%
@@ -132,16 +128,14 @@ IMSR <- synGet(IMSRId) %>%
 
 write_feather(IMSR, IMSROutputFile)
 fIMSR <- synStore(File(IMSROutputFile,
-                       parentId=wotFolderId),
+                       parent=wotFolderId),
                   used=c(IMSRId),
                   forceVersion=FALSE)
 
-geneFPKM <- synGet(geneFPKMId) %>%
-  getFileLocation() %>%
+geneFPKM <- synGet(geneFPKMId)$path %>%
   read_tsv()
 
-geneCovariates <- synGet(geneCovariatesId) %>%
-  getFileLocation() %>%
+geneCovariates <- synGet(geneCovariatesId)$path %>%
   read_tsv() %>%
   filter(cogdx %in% c(1, 4)) %>%
   mutate(cogdx=factor(cogdx, ordered=TRUE))
@@ -158,7 +152,7 @@ geneFPKMLong <- geneFPKMLong %>%
 
 write_feather(geneFPKMLong, geneFPKMLongOutputFile)
 fGeneFPKMLong <- synStore(File(geneFPKMLongOutputFile,
-                               parentId=wotFolderId),
+                               parent=wotFolderId),
                           used=c(geneFPKMId, geneCovariatesId),
                           forceVersion=FALSE)
 
@@ -184,7 +178,7 @@ fGeneFPKMLong <- synStore(File(geneFPKMLongOutputFile,
 #      druggabilityData, targetManifest, targetListDistinct, genesForNetwork,
 #      gg, geneFPKMLong, gtex, medianGTEx, geneExprData, geneDF, dForFilter,
 #      file="./data2load.RData")
-# synStore(File("./data2load.RData", parentId="syn7525089"))
+# synStore(File("./data2load.RData", parent="syn7525089"))
 # diffExprData <- synapseClient::synGet("syn11180450") %>% 
 #   synapseClient::getFileLocation() %>% 
 #   readr::read_csv()

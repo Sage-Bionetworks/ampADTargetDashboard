@@ -12,7 +12,7 @@ shinyServer(function(input, output, session) {
   # foo <- observeEvent(input$cookie, {
   # 
   #   synapseLogin(sessionToken=input$cookie)
-    synapseLogin()
+    synLogin(silent=TRUE)
     withProgress(message = 'Loading data...',
                  {source("load.R")})
     
@@ -118,8 +118,8 @@ shinyServer(function(input, output, session) {
     
     output$notificationMenu <- renderMenu({
       prof <- synGetUserProfile()
-      id <- prof@ownerId
-      name <- prof@userName
+      id <- prof$ownerId
+      name <- prof$userName
       
       url <- sprintf("https://www.synapse.org/#!Profile:%s", id)
       msgs <- list(notificationItem(text=sprintf("Logged in as %s", name),

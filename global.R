@@ -1,4 +1,4 @@
-library(synapseClient)
+library(synapser)
 library(data.table)
 library(mygene)
 library(igraph)
