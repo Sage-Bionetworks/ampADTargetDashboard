@@ -10,6 +10,10 @@ library(tidyverse)
 library(ggplot2)
 library(rjson)
 library(shinyjs)
+library(plotly)
+library(feather)
+
+usePublic <- FALSE
 
 oddiStatusColors <- c("good"="#5e933f", "medium"="#ef7d0b", "bad"="#a30b0d", "unknown"="#a3a3a3")
 lillyStatusColors <- c("3"="#5e933f", "2"="yellow", "1"="#ef7d0b", "0"="#a30b0d", "NA"="#a3a3a3", "unk"="#a3a3a3")
@@ -18,9 +22,8 @@ targetManifsetSketch <- htmltools::withTags(table(
   class = 'display',
   thead(
     tr(
-      th('Gene', title = 'The target gene'),
-      th('Center(s)', title = 'The center(s) nominating this target'),
-      th('Nominations', title= 'Number of centers nominating this target')
+      th('Gene', title = 'The target gene.'),
+      th('Score', title= 'AD target score.')
     )
   )
 ))

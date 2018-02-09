@@ -6,7 +6,7 @@ library(wesanderson)
 shinyServer(function(input, output, session) {
   addClass(selector = "body", class = "sidebar-collapse")
   
-    # session$sendCustomMessage(type="readCookie",
+  # session$sendCustomMessage(type="readCookie",
   #                           message=list(name='org.sagebionetworks.security.user.login.token'))
   # 
   # foo <- observeEvent(input$cookie, {
@@ -49,7 +49,6 @@ shinyServer(function(input, output, session) {
     
     output$targetlist <- DT::renderDataTable(targetManifestTable,
                                              server = TRUE,
-                                             rownames = FALSE,
                                              container=targetManifsetSketch)
 
     output$gomf <- DT::renderDataTable({
@@ -128,25 +127,24 @@ shinyServer(function(input, output, session) {
                                     href=url))
     })
 
-    # edges <- reactive({
-    #   ensGene <- filter(druggabilityData, GENE_SYMBOL== selectedGene())$ensembl.gene
-    #   
-    #   gg.neighbors <- ego(gg, 1, V(gg)[V(gg)$name %in% ensGene])
-    #   
-    #   if (length(gg.neighbors) < 1) {
-    #     # gg2 <- make_empty_graph(1)
-    #     # V(gg2)$name <- ensGene
-    #     # foo <- gg2
-    #     foo <- induced_subgraph(gg, vids = c())
-    #   } else {
-    #     gg.neighbors <- gg.neighbors[[1]]
-    #     foo <- induced_subgraph(gg, vids = gg.neighbors)
-    #   }
-    #   
-    #   foo %>%
-    #     toVisNetworkData()
-    #   
-    # })
+    subnetwork <- reactive({
+      ensGene <- filter(nodesForNetwork, label == selectedGene())$id
+
+      gg.neighbors <- ego(gg, 1, V(gg)[V(gg)$name %in% ensGene])
+
+      if (length(gg.neighbors) < 1) {
+        # gg2 <- make_empty_graph(1)
+        # V(gg2)$name <- ensGene
+        # foo <- gg2
+        foo <- induced_subgraph(gg, vids = c())
+      } else {
+        gg.neighbors <- gg.neighbors[[1]]
+        foo <- induced_subgraph(gg, vids = gg.neighbors)
+      }
+
+      foo
+
+    })
     
     # output$gtex <- renderPlot({
     #   
@@ -204,34 +202,46 @@ shinyServer(function(input, output, session) {
       p
     })
     
-    # output$network <- renderVisNetwork({
-    #   
-    #   gg2 <- edges()    
-    #   validate(need(nrow(gg2$edges) > 0, sprintf("No nodes for the gene '%s'.", selectedGene())))
-    #   validate(need(nrow(gg2$edges) <= 50, sprintf("Network too large (%s edges) for the gene '%s'; maximum number of edges to show is 50.", nrow(edges), selectedGene())))
-    #   
-    #   nodes <- gg2$nodes %>% 
-    #     select(id) %>% 
-    #     left_join(genesForNetwork, by='id') %>% 
-    #     select(gene, id, label) %>% 
-    #     dplyr::mutate(group=ifelse(label %in% targetManifest$Gene, "target", "other")) %>% 
-    #     dplyr::mutate(group=ifelse(label == selectedGene(), "selected", group))
-    #   
-    #   n <- visNetwork(nodes, gg2$edges) %>% 
-    #     visPhysics(solver="forceAtlas2Based", stabilization = TRUE) %>% 
-    #     visEdges(color='black') %>% 
-    #     visLegend() %>% 
-    #     visGroups(groupname='selected', color='green') %>% 
-    #     visGroups(groupname='target', color='#97C1FC') %>% 
-    #     visGroups(groupname='other', color='#FFD58F')
-    #   
-    #   # if (nrow(edges) <=10) {
-    #   #   n <- n %>% visIgraphLayout()
-    #   # }
-    #   
-    #   n
-    # })
-    # 
+    output$network <- renderVisNetwork({
+
+      network <- subnetwork()
+      gg2 <- network %>% toVisNetworkData()
+      myEdges <- gg2$edges %>% dplyr::top_n(50, value)
+      
+      validate(need(nrow(myEdges) > 0, sprintf("No nodes for the gene '%s'.", selectedGene())))
+      
+      if (nrow(myEdges) > 50) {
+        tmp <- myEdges %>% filter(from == selectedGene() | to == selectedGene())
+        maxRowsLeft <- max(0, 50 - nrow(tmp))
+        tmp2 <- myEdges %>% anti_join(tmp) %>% arrange(-value) %>% slice(1:maxRowsLeft)
+        
+        myEdges <- rbind(tmp, tmp2)
+        gg2$nodes <- gg2$nodes %>% filter(id %in% myEdges$from | id %in% myEdges$to)
+        message(sprintf("Network too large (%s edges) for the gene '%s'; maximum number of edges to show is 50.", nrow(edges), selectedGene()))
+      }
+      
+      nodes <- gg2$nodes %>%
+        select(id) %>%
+        left_join(nodesForNetwork, by='id') %>%
+        select(id, label, title, color) %>%
+        dplyr::mutate(group=ifelse(label %in% targetManifest$Gene, "target", "other")) %>%
+        dplyr::mutate(group=ifelse(label == selectedGene(), "selected", group))
+
+      n <- visNetwork(nodes, myEdges) %>%
+        visPhysics(solver="forceAtlas2Based", stabilization = TRUE) %>%
+        visEdges(color='black') %>%
+        visLegend(width=0.1) %>%
+        visGroups(groupname='selected', shape='star', size=40) %>%
+        visGroups(groupname='target', size=25) %>%
+        visGroups(groupname='other', size=15)
+
+      # if (nrow(edges) <=10) {
+      #   n <- n %>% visIgraphLayout()
+      # }
+
+      n
+    })
+     
     # output$edgeTable <- DT::renderDataTable(edges()$edges,
     #                                         options=list(lengthChange=FALSE, pageLength=5, dom="tp"))
 
@@ -270,6 +280,13 @@ shinyServer(function(input, output, session) {
     #           legend.position="bottom")
     # })
 
+    
+    targetInfoValues <- reactiveValues(summary=NULL)
+    
+    output$targetInfoSummary <- reactive({
+      targetInfoValues$summary
+    })
+    
     output$targetInfo <- renderUI({
       geneName <- selectedGene()
       
@@ -288,13 +305,16 @@ shinyServer(function(input, output, session) {
       
       res <- mygene::getGene(ensGene, fields = c('name', 'summary'))[[1]]
       
+      targetInfoValues$summary <- res$summary
+      
       tagList(tags$h3(tags$a(href=sprintf("http://www.genenames.org/cgi-bin/gene_search?search=%s", geneName),
                              target="blank",geneName),
                       sprintf("(%s)", res$name)),
               tags$h4(tags$a(href=sprintf('https://www.targetvalidation.org/target/%s', ens), target="blank", ens),
                       "(Open Targets Platform)"),
               tags$h4(sprintf("Nominated by: %s", centers)),
-              tags$p(sprintf("Summary: %s", res$summary))
+              wellPanel(tags$p(sprintf("Summary: %s", res$summary),
+                               style="white-space:pre-wrap;"))
               )
     })
     
@@ -342,29 +362,84 @@ shinyServer(function(input, output, session) {
                      options=list(highlight=TRUE, openOnFocus=FALSE, 
                                   closeAfterSelect=TRUE, selectOnTab=TRUE))
     })
-    
-    output$selectForestPlot <- renderUI({
-      selectInput('forestModel', label='Model', multiple=FALSE, 
-                  choices=unique(dForFilter$Model), selected="Diagnosis",
-                  width="75%")
-    })
-    
-    output$forest <- renderPlot({
+  
+    output$de <- renderText({
+      
       params <- data.frame(hgnc_symbol=selectedGene(),
-                           Model=input$forestModel)
+                           tissue_study=input$Tissue, 
+                           model_sex=input$Model) %>% 
+        separate(tissue_study, into=c("Tissue", "Study"), sep=", ") %>% 
+        separate(model_sex, into=c("Model", "Sex"), sep=", ")
+      
+      dForPlot <- inner_join(geneExprData, params)
+      isDE <- ifelse(dForPlot$adj.P.Val < 0.05, "is", "is not")
+      
+      glue::glue("{gene} {isDE} differentially expressed (log fold change = {lfc}; adjusted p-value = {pval}) in the {tissue} from {study} when comparing {model} in {sex}.", 
+                 gene=params$hgnc_symbol, isDE=isDE, lfc=round(dForPlot$logFC, 3), pval=round(dForPlot$adj.P.Val, 3),
+                 tissue=params$Tissue, model=params$Model, sex=params$Sex, study=params$Study)
+
+    })
+    output$forest <- renderPlot({
+      params <- data.frame(hgnc_symbol=selectedGene(), 
+                           model_sex=input$Model) %>% 
+        separate(model_sex, into=c("Model", "Sex"), sep=", ") %>% 
+        select(-Sex)
       
       dForPlot <- inner_join(geneExprData, params) %>% 
         mutate(study_tissue_sex=paste(Study, Tissue, Sex))
       
       p <- ggplot(dForPlot)
       p <- p + geom_point(aes(y=logFC, x=study_tissue_sex))
-      p <- p + geom_pointrange(aes(ymax = CI.R, ymin = CI.L, y=logFC, x=study_tissue_sex, color=Study))
+      p <- p + geom_pointrange(aes(ymax = CI.R, ymin = CI.L, y=logFC, 
+                                   x=study_tissue_sex, color=Study))
       p <- p + geom_hline(yintercept = 0, linetype = 2)
       p <- p + coord_flip()
       p <- p + theme_minimal()
+      p <- p + theme(axis.text=element_text(size=12), 
+                     axis.title=element_text(size=14))
+      p <- p + labs(x="Log Fold Change", y=NULL)
       p
     }) 
     
+    output$volcanoSelect <- renderUI({
+      tagList(
+        div(style="display: inline-block;vertical-align:top; width: 150px;",
+            selectInput(inputId="Tissue", label="Tissue",
+                        choices=tissueStudySelections, multiple = FALSE,
+                        selected="TCX, MAYO")),
+        div(style="display: inline-block;vertical-align:top; width: 25px;",HTML("<br>")),
+        div(style="display: inline-block;vertical-align:top; width: 250px;",
+            selectInput(inputId="Model", label="Model",
+                        choices=modelSexSelections, multiple = FALSE,
+                        selected="Diagnosis, Males and Females"))
+      )
+    
+    })
+    
+    
+    output$volcano <- renderPlotly({
+      
+      geneName <- selectedGene()
+      
+      params <- data.frame(tissue_study=input$Tissue, 
+                           model_sex=input$Model) %>% 
+        separate(tissue_study, into=c("Tissue", "Study"), sep=", ") %>% 
+        separate(model_sex, into=c("Model", "Sex"), sep=", ")
+        
+      dForPlot <- inner_join(geneExprData, params)
+      dIsSelected <- dForPlot %>% filter(hgnc_symbol == geneName)
+      
+      p <- ggplot(dForPlot)
+      p <- p + geom_point(aes(x=logFC, y=-log10(adj.P.Val), label=hgnc_symbol), alpha=(1/3))
+      p <- p + geom_point(aes(x=logFC, y=-log10(adj.P.Val), label=hgnc_symbol), 
+                          data=dIsSelected, shape=21, color="red", fill="white", 
+                          size=1, stroke=2)
+      
+      p <- p + theme_minimal()
+      p <- p + labs(x="Log Fold Change", y="-log10(Adjusted p-value)")
+      
+      ggplotly(p) %>% config(displayModeBar = F)
+    })
     
     output$video <- renderUI({
       geneName <- selectedGene()
