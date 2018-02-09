@@ -31,7 +31,7 @@ targetManifest <- synGet(targetManifestId) %>%
 targetManifestTable <- targetManifest %>% 
   DT::datatable(options=list(lengthChange=FALSE,
                              autoWidth=TRUE, scrollX=FALSE,
-                             pageLength=50, dom="ftp"),
+                             pageLength=20, dom="ftp"),
                 rownames = FALSE,
                 selection = list(mode='single', target='row'))
 
