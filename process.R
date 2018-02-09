@@ -17,8 +17,7 @@ scoreData <- synGet(scoreDataId) %>%
   rename(ensembl.gene=gene, Score=adDriverScore, Gene=external_gene_name)
 
 ####### Process target list
-targetListOrig <- synGet(targetListOrigId) %>% 
-  getFileLocation %>% 
+targetListOrig <- synGet(targetListOrigId)$path %>% 
   read_csv()
 
 targetList <- targetListOrig %>%
@@ -27,7 +26,7 @@ targetList <- targetListOrig %>%
 write_csv(targetList, targetListOutputFile)
 
 fTargetList <- synStore(File(targetListOutputFile, 
-                             parentId=wotFolderId), 
+                             parent=wotFolderId), 
                         used=targetListOrigId, forceVersion=FALSE)
 
 targetListDistinct <- targetList %>%
@@ -42,7 +41,7 @@ targetListDistinct <- targetList %>%
 write_csv(targetList, targetListDistinctOutputFile)
 
 fTargetListDistinct <- synStore(File(targetListDistinctOutputFile, 
-                                     parentId=wotFolderId), 
+                                     parent=wotFolderId), 
                         used=fTargetList, forceVersion=FALSE)
 
 targetManifest <- scoreData %>%
@@ -54,6 +53,6 @@ targetManifest <- scoreData %>%
 write_csv(targetManifest, targetManifestOutputFile)
 
 fTargetManifest <- synStore(File(targetManifestOutputFile, 
-                                     parentId=wotFolderId), 
+                                     parent=wotFolderId), 
                                 used=c(fTargetListDistinct, scoreDataId), 
                             forceVersion=FALSE)

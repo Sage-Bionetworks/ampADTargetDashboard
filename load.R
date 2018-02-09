@@ -15,17 +15,14 @@ geneExprDataId <- "syn11326321"
 fGeneFPKMLongId <- 'syn11327106'
 IMSRId <- "syn11420915"
 
-scoreData <- synGet(scoreDataId) %>% 
-  getFileLocation() %>% 
+scoreData <- synGet(scoreDataId)$path %>% 
   read_csv() %>% 
   rename(ensembl.gene=gene, Score=adDriverScore, Gene=external_gene_name)
 
-targetListOrig <- synGet(targetListOrigId) %>% 
-  getFileLocation %>% 
+targetListOrig <- synGet(targetListOrigId)$path %>% 
   read_csv()
 
-targetManifest <- synGet(targetManifestId) %>% 
-  getFileLocation %>% 
+targetManifest <- synGet(targetManifestId)$path %>% 
   read_csv()
 
 targetManifestTable <- targetManifest %>% 
@@ -35,8 +32,7 @@ targetManifestTable <- targetManifest %>%
                 rownames = FALSE,
                 selection = list(mode='single', target='row'))
 
-geneExprData <- synGet(geneExprDataId) %>% 
-  getFileLocation %>% 
+geneExprData <- synGet(geneExprDataId)$path %>%
   read_feather()
 
 geneDF <- geneExprData %>%
@@ -68,15 +64,13 @@ modelSexSelectionsDF <- dForFilter %>%
 modelSexSelections <- purrr::set_names(modelSexSelectionsDF$model_sex, 
                                        modelSexSelectionsDF$model_sex_pretty)
 
-IMSR <- synGet(IMSRId) %>% 
-  getFileLocation() %>% 
+IMSR <- synGet(IMSRId)$path %>% 
   read_feather()
 
-geneFPKMLong <- synGet(fGeneFPKMLongId) %>% 
-  getFileLocation() %>% 
+geneFPKMLong <- synGet(fGeneFPKMLongId)$path %>% 
   read_feather()
 
-network <- readr::read_csv(synGet("syn11685347") %>% getFileLocation())
+network <- readr::read_csv(synGet("syn11685347")$path)
 
 network2 <- network %>% 
   group_by(geneA_ensembl_gene_id, geneB_ensembl_gene_id,
