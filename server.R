@@ -6,7 +6,7 @@ library(wesanderson)
 shinyServer(function(input, output, session) {
   addClass(selector = "body", class = "sidebar-collapse")
   
-    # session$sendCustomMessage(type="readCookie",
+  # session$sendCustomMessage(type="readCookie",
   #                           message=list(name='org.sagebionetworks.security.user.login.token'))
   # 
   # foo <- observeEvent(input$cookie, {
@@ -49,7 +49,6 @@ shinyServer(function(input, output, session) {
     
     output$targetlist <- DT::renderDataTable(targetManifestTable,
                                              server = TRUE,
-                                             rownames = FALSE,
                                              container=targetManifsetSketch)
 
     output$gomf <- DT::renderDataTable({
@@ -128,8 +127,8 @@ shinyServer(function(input, output, session) {
                                     href=url))
     })
 
-    edges <- reactive({
-      ensGene <- filter(genesForNetwork, symbol == selectedGene())$gene
+    subnetwork <- reactive({
+      ensGene <- filter(nodesForNetwork, label == selectedGene())$id
 
       gg.neighbors <- ego(gg, 1, V(gg)[V(gg)$name %in% ensGene])
 
@@ -143,8 +142,7 @@ shinyServer(function(input, output, session) {
         foo <- induced_subgraph(gg, vids = gg.neighbors)
       }
 
-      foo %>%
-        toVisNetworkData()
+      foo
 
     })
     
@@ -206,24 +204,36 @@ shinyServer(function(input, output, session) {
     
     output$network <- renderVisNetwork({
 
-      gg2 <- edges()
-      validate(need(nrow(gg2$edges) > 0, sprintf("No nodes for the gene '%s'.", selectedGene())))
-      validate(need(nrow(gg2$edges) <= 75, sprintf("Network too large (%s edges) for the gene '%s'; maximum number of edges to show is 50.", nrow(edges), selectedGene())))
-
+      network <- subnetwork()
+      gg2 <- network %>% toVisNetworkData()
+      myEdges <- gg2$edges %>% dplyr::top_n(50, value)
+      
+      validate(need(nrow(myEdges) > 0, sprintf("No nodes for the gene '%s'.", selectedGene())))
+      
+      if (nrow(myEdges) > 50) {
+        tmp <- myEdges %>% filter(from == selectedGene() | to == selectedGene())
+        maxRowsLeft <- max(0, 50 - nrow(tmp))
+        tmp2 <- myEdges %>% anti_join(tmp) %>% arrange(-value) %>% slice(1:maxRowsLeft)
+        
+        myEdges <- rbind(tmp, tmp2)
+        gg2$nodes <- gg2$nodes %>% filter(id %in% myEdges$from | id %in% myEdges$to)
+        message(sprintf("Network too large (%s edges) for the gene '%s'; maximum number of edges to show is 50.", nrow(edges), selectedGene()))
+      }
+      
       nodes <- gg2$nodes %>%
         select(id) %>%
-        left_join(genesForNetwork, by='id') %>%
-        select(gene, id, label) %>%
+        left_join(nodesForNetwork, by='id') %>%
+        select(id, label, title, color) %>%
         dplyr::mutate(group=ifelse(label %in% targetManifest$Gene, "target", "other")) %>%
         dplyr::mutate(group=ifelse(label == selectedGene(), "selected", group))
 
-      n <- visNetwork(nodes, gg2$edges) %>%
+      n <- visNetwork(nodes, myEdges) %>%
         visPhysics(solver="forceAtlas2Based", stabilization = TRUE) %>%
         visEdges(color='black') %>%
         visLegend(width=0.1) %>%
-        visGroups(groupname='selected', color='green') %>%
-        visGroups(groupname='target', color='#97C1FC') %>%
-        visGroups(groupname='other', color='#FFD58F')
+        visGroups(groupname='selected', shape='star', size=40) %>%
+        visGroups(groupname='target', size=25) %>%
+        visGroups(groupname='other', size=15)
 
       # if (nrow(edges) <=10) {
       #   n <- n %>% visIgraphLayout()

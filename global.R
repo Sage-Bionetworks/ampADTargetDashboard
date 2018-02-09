@@ -22,9 +22,8 @@ targetManifsetSketch <- htmltools::withTags(table(
   class = 'display',
   thead(
     tr(
-      th('Gene', title = 'The target gene'),
-      th('Center(s)', title = 'The center(s) nominating this target'),
-      th('Nominations', title= 'Number of centers nominating this target')
+      th('Gene', title = 'The target gene.'),
+      th('Score', title= 'AD target score.')
     )
   )
 ))

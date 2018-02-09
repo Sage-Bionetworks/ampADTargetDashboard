@@ -1,13 +1,11 @@
 
 if (usePublic) {
   # Public data
-  druggabilityDataId <- "syn11420935"
   targetListOrigId <- "syn8656625"
-  targetListDistinctId <- "syn11318663"
   targetManifestId <- "syn11421445"
 } else {
   # Unreleased data
-  druggabilityDataId <- "syn11420935"
+  scoreDataId <- "syn11688680"
   targetListOrigId <- "syn11421406"
   targetListDistinctId <- "syn11421426"
   targetManifestId <- "syn11318664"
@@ -17,14 +15,12 @@ geneExprDataId <- "syn11326321"
 fGeneFPKMLongId <- 'syn11327106'
 IMSRId <- "syn11420915"
 
-druggabilityData <- synGet(druggabilityDataId) %>% 
-  getFileLocation() %>% read_csv()
+scoreData <- synGet(scoreDataId) %>% 
+  getFileLocation() %>% 
+  read_csv() %>% 
+  rename(ensembl.gene=gene, Score=adDriverScore, Gene=external_gene_name)
 
 targetListOrig <- synGet(targetListOrigId) %>% 
-  getFileLocation %>% 
-  read_csv()
-
-targetListDistinct <- synGet(targetListDistinctId) %>% 
   getFileLocation %>% 
   read_csv()
 
@@ -32,23 +28,12 @@ targetManifest <- synGet(targetManifestId) %>%
   getFileLocation %>% 
   read_csv()
 
-targetManifestTable <- targetManifest %>%
-  left_join(druggabilityData %>% dplyr::select(Gene=GENE_SYMBOL,
-                                               Assays=status_assays,
-                                               `In vivo`=status_in_vivo_work,
-                                               `Known ligands`=status_known_ligands)) %>%
+targetManifestTable <- targetManifest %>% 
   DT::datatable(options=list(lengthChange=FALSE,
-                             autoWidth=TRUE, scrollX=TRUE,
-                             pageLength=50, dom="ftp",
-                             columnDefs = list(list(width = '75px', targets =c(0,3,4,5)))),
+                             autoWidth=TRUE, scrollX=FALSE,
+                             pageLength=20, dom="ftp"),
                 rownames = FALSE,
-                selection = list(mode='single', target='row')) %>%
-  DT::formatStyle(c('Assays', 'Known ligands', 'In vivo'),
-                  backgroundColor=DT::styleEqual(c("good", "medium", "bad", "unknown"), #levels(tmp$status),
-                                                 c("green", "orange", "red", "grey")),
-                  color=DT::styleEqual(c("good", "medium", "bad", "unknown"), #levels(tmp$status),
-                                       c("green", "orange", "red", "grey"))) %>% 
-  DT::formatStyle(columns = c(1, 2, 3), fontSize = '125%')
+                selection = list(mode='single', target='row'))
 
 geneExprData <- synGet(geneExprDataId) %>% 
   getFileLocation %>% 
@@ -93,22 +78,38 @@ geneFPKMLong <- synGet(fGeneFPKMLongId) %>%
 
 network <- readr::read_csv(synGet("syn11685347") %>% getFileLocation())
 
-network2 <- network %>% group_by(geneA_ensembl_gene_id, geneB_ensembl_gene_id,
+network2 <- network %>% 
+  group_by(geneA_ensembl_gene_id, geneB_ensembl_gene_id,
                                  geneA_external_gene_name, geneB_external_gene_name) %>% 
   summarize(value=n_distinct(brainRegion)) %>% 
+  #  regions=paste(unique(brainRegion), collapse=","))
   ungroup() %>% 
   distinct() %>% 
   filter(value > 1)
 
-
-genesForNetwork <- dplyr::bind_rows(network %>% 
+network2 <- network2 %>% left_join(network) %>% 
+  group_by(geneA_ensembl_gene_id, geneB_ensembl_gene_id,
+           geneA_external_gene_name, geneB_external_gene_name, value) %>% 
+  summarize(title=paste(unique(brainRegion), collapse=",")) %>% 
+  ungroup()
+  
+  
+nodesForNetwork <- dplyr::bind_rows(network2 %>% 
                                       select(gene=geneA_ensembl_gene_id, 
                                              symbol=geneA_external_gene_name),
-                                    network %>% 
+                                    network2 %>% 
                                       select(gene=geneB_ensembl_gene_id, 
                                              symbol=geneB_external_gene_name)) %>% 
   distinct() %>% 
-  mutate(id=gene, label=ifelse(is.na(symbol), gene, symbol))
+  mutate(label=ifelse(is.na(symbol), gene, symbol)) %>% 
+  select(id=gene, label) %>% 
+  left_join(scoreData %>% select(id=ensembl.gene, Score)) %>% 
+  mutate(title=sprintf("score: %0.1f", Score)) %>% 
+  mutate(color=cut(Score, breaks=c(-Inf, 0, 2, 4, Inf), 
+                   labels=c("red", "yellow", "orange", "green")))
+
+edgesForNetwork <- network2 %>% 
+  select(from=geneA_ensembl_gene_id, to=geneB_ensembl_gene_id, value, title)
 
 
 gg <- graph_from_data_frame(network2)
