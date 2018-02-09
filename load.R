@@ -78,22 +78,38 @@ geneFPKMLong <- synGet(fGeneFPKMLongId) %>%
 
 network <- readr::read_csv(synGet("syn11685347") %>% getFileLocation())
 
-network2 <- network %>% group_by(geneA_ensembl_gene_id, geneB_ensembl_gene_id,
+network2 <- network %>% 
+  group_by(geneA_ensembl_gene_id, geneB_ensembl_gene_id,
                                  geneA_external_gene_name, geneB_external_gene_name) %>% 
   summarize(value=n_distinct(brainRegion)) %>% 
+  #  regions=paste(unique(brainRegion), collapse=","))
   ungroup() %>% 
   distinct() %>% 
   filter(value > 1)
 
-
-genesForNetwork <- dplyr::bind_rows(network %>% 
+network2 <- network2 %>% left_join(network) %>% 
+  group_by(geneA_ensembl_gene_id, geneB_ensembl_gene_id,
+           geneA_external_gene_name, geneB_external_gene_name, value) %>% 
+  summarize(title=paste(unique(brainRegion), collapse=",")) %>% 
+  ungroup()
+  
+  
+nodesForNetwork <- dplyr::bind_rows(network2 %>% 
                                       select(gene=geneA_ensembl_gene_id, 
                                              symbol=geneA_external_gene_name),
-                                    network %>% 
+                                    network2 %>% 
                                       select(gene=geneB_ensembl_gene_id, 
                                              symbol=geneB_external_gene_name)) %>% 
   distinct() %>% 
-  mutate(id=gene, label=ifelse(is.na(symbol), gene, symbol))
+  mutate(label=ifelse(is.na(symbol), gene, symbol)) %>% 
+  select(id=gene, label) %>% 
+  left_join(scoreData %>% select(id=ensembl.gene, Score)) %>% 
+  mutate(title=sprintf("score: %0.1f", Score)) %>% 
+  mutate(color=cut(Score, breaks=c(-Inf, 0, 2, 4, Inf), 
+                   labels=c("red", "yellow", "orange", "green")))
+
+edgesForNetwork <- network2 %>% 
+  select(from=geneA_ensembl_gene_id, to=geneB_ensembl_gene_id, value, title)
 
 
 gg <- graph_from_data_frame(network2)

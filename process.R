@@ -42,7 +42,7 @@ targetListDistinct <- targetList %>%
 write_csv(targetList, targetListDistinctOutputFile)
 
 fTargetListDistinct <- synStore(File(targetListDistinctOutputFile, 
-                             parentId=wotFolderId), 
+                                     parentId=wotFolderId), 
                         used=fTargetList, forceVersion=FALSE)
 
 targetManifest <- scoreData %>%
