@@ -12,6 +12,7 @@ library(rjson)
 library(shinyjs)
 library(plotly)
 library(feather)
+library(glue)
 
 usePublic <- FALSE
 
