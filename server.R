@@ -11,8 +11,8 @@ shinyServer(function(input, output, session) {
 
   foo <- observeEvent(input$cookie, {
 
-    synapseLogin(sessionToken=input$cookie)
-    synLogin(silent=TRUE)
+    synLogin(sessionToken=input$cookie)
+    # synLogin(silent=TRUE)
     withProgress(message = 'Loading data...',
                  {source("load.R")})
     
