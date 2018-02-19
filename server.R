@@ -207,8 +207,8 @@ shinyServer(function(input, output, session) {
       geneList <- targetListOrig %>% filter(gene_symbol == geneName)
       
       if (nrow(geneList) > 0) {
-        ens <- paste(unique(geneList$ensembl.gene), collapse=",")
-        centers <- paste(geneList$Center, collapse=", ")
+        ens <- paste(unique(geneList$ensembl_id), collapse=",")
+        centers <- paste(geneList$group, collapse=", ")
       }
       else {
         ens <- ensGene
