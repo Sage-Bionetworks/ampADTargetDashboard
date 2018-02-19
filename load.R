@@ -1,13 +1,12 @@
 
 if (usePublic) {
   # Public data
-  targetListOrigId <- "syn8656625"
+  targetListOrigId <- "syn11421406"
   targetManifestId <- "syn11421445"
 } else {
   # Unreleased data
   scoreDataId <- "syn11688680"
-  targetListOrigId <- "syn11421406"
-  targetListDistinctId <- "syn11421426"
+  targetListOrigId <- "syn8656625"
   targetManifestId <- "syn11318664"
 }
 
