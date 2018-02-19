@@ -6,12 +6,12 @@ library(wesanderson)
 shinyServer(function(input, output, session) {
   addClass(selector = "body", class = "sidebar-collapse")
   
-  # session$sendCustomMessage(type="readCookie",
-  #                           message=list(name='org.sagebionetworks.security.user.login.token'))
-  # 
-  # foo <- observeEvent(input$cookie, {
-  # 
-  #   synapseLogin(sessionToken=input$cookie)
+  session$sendCustomMessage(type="readCookie",
+                            message=list(name='org.sagebionetworks.security.user.login.token'))
+
+  foo <- observeEvent(input$cookie, {
+
+    synapseLogin(sessionToken=input$cookie)
     synLogin(silent=TRUE)
     withProgress(message = 'Loading data...',
                  {source("load.R")})
@@ -454,5 +454,5 @@ shinyServer(function(input, output, session) {
       # HTML(sprintf('<video height="250" controls><source src="%s" type="video/mp4"></video>', 
       #              vids[[geneList$Center]]))
     })
-   ## })
+  })
 })
