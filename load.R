@@ -41,13 +41,9 @@ geneDF <- geneExprData %>%
 
 # create list of filters
 dForFilter <- geneExprData %>% 
-  dplyr::distinct(Study, Tissue, Model, Sex)
-
-dForFilter <- dForFilter %>% 
-  tidyr::unite("tissue_study", Tissue, Study, sep=", ", remove=FALSE) %>% 
-  tidyr::unite("model_sex", Model, Sex, sep=", ", remove=FALSE) %>% 
-  mutate(tissue_study_pretty=glue::glue("{tissue} ({study})", tissue=Tissue, study=Study),
-         model_sex_pretty=glue::glue("{model} ({sex})", model=Model, sex=Sex)) 
+  dplyr::distinct(Study, Tissue, Model, Sex, 
+                  tissue_study, tissue_study_pretty,
+                  model_sex, model_sex_pretty)
 
 tissueStudySelectionsDF <- dForFilter %>% 
   select(tissue_study, tissue_study_pretty) %>% 
