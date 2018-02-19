@@ -1,4 +1,4 @@
-<img src="amp.jpg" width="50%"/>
+<img src="amp.jpg" width="25%"/>
 
 ## Welcome to the AMP-AD Wall of Targets!
 
