@@ -430,8 +430,8 @@ shinyServer(function(input, output, session) {
       dIsSelected <- dForPlot %>% filter(hgnc_symbol == geneName)
       
       p <- ggplot(dForPlot)
-      p <- p + geom_point(aes(x=logFC, y=-log10(adj.P.Val), label=hgnc_symbol), alpha=(1/3))
-      p <- p + geom_point(aes(x=logFC, y=-log10(adj.P.Val), label=hgnc_symbol), 
+      p <- p + geom_point(aes(x=logFC, y=neg.log10.adj.P.Val, label=hgnc_symbol), alpha=(1/3))
+      p <- p + geom_point(aes(x=logFC, y=neg.log10.adj.P.Val, label=hgnc_symbol), 
                           data=dIsSelected, shape=21, color="red", fill="white", 
                           size=1, stroke=2)
       
