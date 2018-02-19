@@ -29,14 +29,6 @@ shinyServer(function(input, output, session) {
     
     selectedGene <- reactive({
       gene$geneName
-      # if (input$inputgene == "Nominated Target Genes") {
-      #   gene <- targetManifest[as.numeric(input$targetlist_rows_selected), ]$Gene
-      # }
-      # else if (input$inputgene == "Gene Search") {
-      #   input$selectGeneBoxButton
-      #   gene <- input$inputSelectedGene
-      # }
-      # return(gene)
     })
     
     observeEvent(input$targetlist, {
@@ -62,10 +54,6 @@ shinyServer(function(input, output, session) {
       DT::datatable(res, options = list(lengthChange = FALSE, dom="tp", pageLength=5),
                     rownames = FALSE)
       
-      # # DT::datatable(data.frame(a=1, b=2 c=3))#,
-      #               # options=list(lengthChange=FALSE, 
-      #               #              pageLength=50, dom="ftp"),
-      #               # rownames = FALSE)
     })
 
     output$reactome <- DT::renderDataTable({
@@ -133,9 +121,6 @@ shinyServer(function(input, output, session) {
       gg.neighbors <- ego(gg, 1, V(gg)[V(gg)$name %in% ensGene])
 
       if (length(gg.neighbors) < 1) {
-        # gg2 <- make_empty_graph(1)
-        # V(gg2)$name <- ensGene
-        # foo <- gg2
         foo <- induced_subgraph(gg, vids = c())
       } else {
         gg.neighbors <- gg.neighbors[[1]]
@@ -145,37 +130,6 @@ shinyServer(function(input, output, session) {
       foo
 
     })
-    
-    # output$gtex <- renderPlot({
-    #   
-    #   fpkmGenes <- filter(gtex, hgnc_symbol == selectedGene())$ensembl.gene
-    #   message(sprintf('fpkmGenes = %s', fpkmGenes))
-    #   validate(need(length(fpkmGenes) > 0, "No expression data to display."))
-    #   
-    #   tmp <- gtex %>% dplyr::filter(ensembl.gene %in% fpkmGenes)
-    #   
-    #   p <- ggplot(tmp, aes(x=tissue, y=medianFPKM))
-    #   p <- p + geom_col(fill="black")
-    #   p <- p + geom_hline(yintercept = medianGTEx, color='red')
-    #   p <- p + theme_bw()
-    #   p <- p + theme(axis.text.x=element_text(angle=270, vjust = 0),
-    #                  legend.position = "none", 
-    #                  axis.title.x=element_blank())
-    #   p
-    # })
-
-    # output$gtex <- renderImage({
-    #     # When input$n is 3, filename is ./images/image3.jpeg
-    #     filename <- normalizePath(file.path('./gxa_static.png'))
-    #     
-    #     # Return a list containing the filename and alt text
-    #     list(src = filename,
-    #          height = 400,
-    #          alt = 'GXA Static Image')
-    #     
-    #   }, deleteFile = FALSE)    
-    
-    # output$gtexText <- renderText({"See more expression data at Expression Atlas. This expression view is provided by Expression Atlas. Please send any queries or feedback to arrayexpress-atlas@ebi.ac.uk."})
     
     output$expression <- renderPlot({
 
@@ -235,51 +189,9 @@ shinyServer(function(input, output, session) {
         visGroups(groupname='target', size=25) %>%
         visGroups(groupname='other', size=15)
 
-      # if (nrow(edges) <=10) {
-      #   n <- n %>% visIgraphLayout()
-      # }
 
       n
     })
-     
-    # output$edgeTable <- DT::renderDataTable(edges()$edges,
-    #                                         options=list(lengthChange=FALSE, pageLength=5, dom="tp"))
-
-    # output$lillyDrugability <- renderPlot({
-    #   selGene <- selectedGene()
-    #   
-    #   tmp <- druggabilityData %>%
-    #     filter(GENE_SYMBOL == selGene)
-    #   
-    #   if (nrow(tmp) == 0) {
-    #     tmp <- data_frame(GENE_SYMBOL=selGene, 
-    #                       Lilly_DrugEBIlity_Consensus_Score='unk',
-    #                       `Lilly_GW_Druggability_Structure-based`='unk')
-    #   }
-    #   tmp <- tmp %>%
-    #     select(GENE_SYMBOL, 
-    #            `Consensus Score`=Lilly_DrugEBIlity_Consensus_Score,
-    #            `Structure-based Score`=`Lilly_GW_Druggability_Structure-based`) %>% 
-    #     top_n(1) %>% 
-    #     tidyr::gather(key = 'type', value = 'score',
-    #                   c(`Consensus Score`,
-    #                   `Structure-based Score`)) %>% 
-    #     mutate(score=factor(score, levels=c("unk", "0", "1", "2", "3")))
-    #   
-    #   validate(need(nrow(tmp) > 0, "No data to display."))
-    #   
-    #   tmp$Center <- NA
-    #   ggplot(tmp, aes(x=type, y=Center)) + 
-    #     facet_wrap( ~ type, scales="free", ncol=5) +
-    #     geom_tile(aes(fill=score)) + 
-    #     scale_fill_manual(values=lillyStatusColors, drop = FALSE) + 
-    #     theme_bw() + 
-    #     theme(axis.text=element_blank(), axis.title=element_blank(),
-    #           axis.ticks=element_blank(), strip.text.y=element_text(angle=360),
-    #           strip.background=element_rect(fill="white"),
-    #           legend.position="bottom")
-    # })
-
     
     targetInfoValues <- reactiveValues(summary=NULL)
     
@@ -318,43 +230,6 @@ shinyServer(function(input, output, session) {
               )
     })
     
-    # output$status <- renderPlot({
-    #   
-    #   geneName <- selectedGene()
-    #   tmp <- druggabilityData %>%
-    #     filter(GENE_SYMBOL == geneName)
-    #   
-    #   if (nrow(tmp) == 0) {
-    #     y <- rbind(tmp, rep('unknown', ncol(tmp)))
-    #     colnames(y) <- colnames(tmp)
-    #     y$GENE_SYMBOL <- geneName
-    #     tmp <- y
-    #   }
-    # 
-    #   tmp <- tmp %>%
-    #     select(starts_with("status")) %>% 
-    #     top_n(1) %>% 
-    #     tidyr::gather(key = 'type', value = 'status', starts_with("status")) %>% 
-    #     mutate(status=factor(status, levels=c("good", "medium", "bad", "unknown"), ordered=TRUE))
-    #   
-    #   validate(need(nrow(tmp) > 0, "No data to display."))
-    #   
-    #   tmp$type <- forcats::fct_recode(tmp$type, `Known Ligands`="status_known_ligands", 
-    #                                   `Crystal Structures`="status_crystal_structure", 
-    #                                   Pocket="status_pocket", Assays="status_assays", 
-    #                                   `In vivo`="status_in_vivo_work")
-    #   tmp$Center <- NA
-    #   ggplot(tmp, aes(x=type, y=Center)) + 
-    #     facet_wrap( ~ type, scales="free", ncol=5) +
-    #     geom_tile(aes(fill=status)) + 
-    #     scale_fill_manual(values=oddiStatusColors, drop = FALSE) + 
-    #     theme_bw() + 
-    #     theme(axis.text=element_blank(), axis.title=element_blank(),
-    #           axis.ticks=element_blank(), strip.text.y=element_text(angle=360),
-    #           strip.background=element_rect(fill="white"),
-    #           legend.position="bottom")
-    # })
-
     output$selectGeneBox <- renderUI({
       selectizeInput('inputSelectedGene', label='Gene Symbol', multiple=FALSE,
                      choices=c("Select a gene"="", unique(geneExprData$hgnc_symbol)), 
@@ -416,7 +291,6 @@ shinyServer(function(input, output, session) {
     
     })
     
-    
     output$volcano <- renderPlotly({
       
       geneName <- selectedGene()
@@ -454,5 +328,113 @@ shinyServer(function(input, output, session) {
       # HTML(sprintf('<video height="250" controls><source src="%s" type="video/mp4"></video>', 
       #              vids[[geneList$Center]]))
     })
+    
+    
+    # output$gtex <- renderPlot({
+    #   
+    #   fpkmGenes <- filter(gtex, hgnc_symbol == selectedGene())$ensembl.gene
+    #   message(sprintf('fpkmGenes = %s', fpkmGenes))
+    #   validate(need(length(fpkmGenes) > 0, "No expression data to display."))
+    #   
+    #   tmp <- gtex %>% dplyr::filter(ensembl.gene %in% fpkmGenes)
+    #   
+    #   p <- ggplot(tmp, aes(x=tissue, y=medianFPKM))
+    #   p <- p + geom_col(fill="black")
+    #   p <- p + geom_hline(yintercept = medianGTEx, color='red')
+    #   p <- p + theme_bw()
+    #   p <- p + theme(axis.text.x=element_text(angle=270, vjust = 0),
+    #                  legend.position = "none", 
+    #                  axis.title.x=element_blank())
+    #   p
+    # })
+    
+    # output$gtex <- renderImage({
+    #     # When input$n is 3, filename is ./images/image3.jpeg
+    #     filename <- normalizePath(file.path('./gxa_static.png'))
+    #     
+    #     # Return a list containing the filename and alt text
+    #     list(src = filename,
+    #          height = 400,
+    #          alt = 'GXA Static Image')
+    #     
+    #   }, deleteFile = FALSE)    
+    
+    # output$gtexText <- renderText({"See more expression data at Expression Atlas. This expression view is provided by Expression Atlas. Please send any queries or feedback to arrayexpress-atlas@ebi.ac.uk."})
+    
+    # output$edgeTable <- DT::renderDataTable(edges()$edges,
+    #                                         options=list(lengthChange=FALSE, pageLength=5, dom="tp"))
+    
+    # output$lillyDrugability <- renderPlot({
+    #   selGene <- selectedGene()
+    #   
+    #   tmp <- druggabilityData %>%
+    #     filter(GENE_SYMBOL == selGene)
+    #   
+    #   if (nrow(tmp) == 0) {
+    #     tmp <- data_frame(GENE_SYMBOL=selGene, 
+    #                       Lilly_DrugEBIlity_Consensus_Score='unk',
+    #                       `Lilly_GW_Druggability_Structure-based`='unk')
+    #   }
+    #   tmp <- tmp %>%
+    #     select(GENE_SYMBOL, 
+    #            `Consensus Score`=Lilly_DrugEBIlity_Consensus_Score,
+    #            `Structure-based Score`=`Lilly_GW_Druggability_Structure-based`) %>% 
+    #     top_n(1) %>% 
+    #     tidyr::gather(key = 'type', value = 'score',
+    #                   c(`Consensus Score`,
+    #                   `Structure-based Score`)) %>% 
+    #     mutate(score=factor(score, levels=c("unk", "0", "1", "2", "3")))
+    #   
+    #   validate(need(nrow(tmp) > 0, "No data to display."))
+    #   
+    #   tmp$Center <- NA
+    #   ggplot(tmp, aes(x=type, y=Center)) + 
+    #     facet_wrap( ~ type, scales="free", ncol=5) +
+    #     geom_tile(aes(fill=score)) + 
+    #     scale_fill_manual(values=lillyStatusColors, drop = FALSE) + 
+    #     theme_bw() + 
+    #     theme(axis.text=element_blank(), axis.title=element_blank(),
+    #           axis.ticks=element_blank(), strip.text.y=element_text(angle=360),
+    #           strip.background=element_rect(fill="white"),
+    #           legend.position="bottom")
+    # })
+    
+    # output$status <- renderPlot({
+    #   
+    #   geneName <- selectedGene()
+    #   tmp <- druggabilityData %>%
+    #     filter(GENE_SYMBOL == geneName)
+    #   
+    #   if (nrow(tmp) == 0) {
+    #     y <- rbind(tmp, rep('unknown', ncol(tmp)))
+    #     colnames(y) <- colnames(tmp)
+    #     y$GENE_SYMBOL <- geneName
+    #     tmp <- y
+    #   }
+    # 
+    #   tmp <- tmp %>%
+    #     select(starts_with("status")) %>% 
+    #     top_n(1) %>% 
+    #     tidyr::gather(key = 'type', value = 'status', starts_with("status")) %>% 
+    #     mutate(status=factor(status, levels=c("good", "medium", "bad", "unknown"), ordered=TRUE))
+    #   
+    #   validate(need(nrow(tmp) > 0, "No data to display."))
+    #   
+    #   tmp$type <- forcats::fct_recode(tmp$type, `Known Ligands`="status_known_ligands", 
+    #                                   `Crystal Structures`="status_crystal_structure", 
+    #                                   Pocket="status_pocket", Assays="status_assays", 
+    #                                   `In vivo`="status_in_vivo_work")
+    #   tmp$Center <- NA
+    #   ggplot(tmp, aes(x=type, y=Center)) + 
+    #     facet_wrap( ~ type, scales="free", ncol=5) +
+    #     geom_tile(aes(fill=status)) + 
+    #     scale_fill_manual(values=oddiStatusColors, drop = FALSE) + 
+    #     theme_bw() + 
+    #     theme(axis.text=element_blank(), axis.title=element_blank(),
+    #           axis.ticks=element_blank(), strip.text.y=element_text(angle=360),
+    #           strip.background=element_rect(fill="white"),
+    #           legend.position="bottom")
+    # })
+    
   })
 })
