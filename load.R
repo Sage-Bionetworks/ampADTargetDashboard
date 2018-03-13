@@ -8,6 +8,7 @@ if (usePublic) {
   scoreDataId <- "syn11688680"
   targetListOrigId <- "syn8656625"
   targetManifestId <- "syn11318664"
+  networkDataId <- "syn11685347"
 }
 
 geneExprDataId <- "syn11326321"
@@ -42,7 +43,7 @@ geneDF <- geneExprData %>%
 dForFilter <- geneExprData %>% 
   dplyr::distinct(Study, Tissue, Model, Sex, 
                   tissue_study, tissue_study_pretty,
-                  model_sex, model_sex_pretty)
+                  comparison_model_sex, comparison_model_sex_pretty)
 
 tissueStudySelectionsDF <- dForFilter %>% 
   select(tissue_study, tissue_study_pretty) %>% 
@@ -53,11 +54,11 @@ tissueStudySelections <- purrr::set_names(tissueStudySelectionsDF$tissue_study,
 
 
 modelSexSelectionsDF <- dForFilter %>% 
-  select(model_sex, model_sex_pretty) %>% 
+  select(comparison_model_sex, comparison_model_sex_pretty) %>% 
   distinct()
 
-modelSexSelections <- purrr::set_names(modelSexSelectionsDF$model_sex, 
-                                       modelSexSelectionsDF$model_sex_pretty)
+modelSexSelections <- purrr::set_names(modelSexSelectionsDF$comparison_model_sex, 
+                                       modelSexSelectionsDF$comparison_model_sex_pretty)
 
 IMSR <- synGet(IMSRId)$path %>% 
   read_feather()
@@ -65,7 +66,7 @@ IMSR <- synGet(IMSRId)$path %>%
 geneFPKMLong <- synGet(fGeneFPKMLongId)$path %>% 
   read_feather()
 
-network <- readr::read_csv(synGet("syn11685347")$path)
+network <- readr::read_csv(synGet(networkDataId)$path)
 
 network2 <- network %>% 
   group_by(geneA_ensembl_gene_id, geneB_ensembl_gene_id,

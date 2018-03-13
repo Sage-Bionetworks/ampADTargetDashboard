@@ -242,9 +242,9 @@ shinyServer(function(input, output, session) {
       
       params <- data.frame(hgnc_symbol=selectedGene(),
                            tissue_study=input$Tissue, 
-                           model_sex=input$Model) %>% 
+                           comparison_model_sex=input$Model) %>% 
         separate(tissue_study, into=c("Tissue", "Study"), sep=", ") %>% 
-        separate(model_sex, into=c("Model", "Sex"), sep=", ")
+        separate(comparison_model_sex, into=c("Comparison", "Model", "Sex"), sep=", ")
       
       dForPlot <- inner_join(geneExprData, params)
       isDE <- ifelse(dForPlot$adj.P.Val < 0.05, "is", "is not")
@@ -256,12 +256,12 @@ shinyServer(function(input, output, session) {
     })
     output$forest <- renderPlot({
       params <- data.frame(hgnc_symbol=selectedGene(), 
-                           model_sex=input$Model) %>% 
-        separate(model_sex, into=c("Model", "Sex"), sep=", ") %>% 
+                           comparison_model_sex=input$Model) %>% 
+        separate(model_sex, into=c("Comparison", "Model", "Sex"), sep=", ") %>% 
         select(-Sex)
       
       dForPlot <- inner_join(geneExprData, params) %>% 
-        mutate(study_tissue_sex=paste(Study, Tissue, Sex))
+        mutate(study_tissue_sex=paste(Study, Comparison, Tissue, Sex))
       
       p <- ggplot(dForPlot)
       p <- p + geom_point(aes(y=logFC, x=study_tissue_sex))
@@ -286,7 +286,7 @@ shinyServer(function(input, output, session) {
         div(style="display: inline-block;vertical-align:top; width: 250px;",
             selectInput(inputId="Model", label="Model",
                         choices=modelSexSelections, multiple = FALSE,
-                        selected="Diagnosis, Males and Females"))
+                        selected="AD-CONTROL, Diagnosis, Males and Females"))
       )
     
     })
@@ -298,7 +298,7 @@ shinyServer(function(input, output, session) {
       params <- data.frame(tissue_study=input$Tissue, 
                            model_sex=input$Model) %>% 
         separate(tissue_study, into=c("Tissue", "Study"), sep=", ") %>% 
-        separate(model_sex, into=c("Model", "Sex"), sep=", ")
+        separate(model_sex, into=c("Comparison", "Model", "Sex"), sep=", ")
         
       dForPlot <- inner_join(geneExprData, params)
       dIsSelected <- dForPlot %>% filter(hgnc_symbol == geneName)

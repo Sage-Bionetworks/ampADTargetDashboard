@@ -28,12 +28,9 @@ geneFPKMLongOutputFile <- "./geneFPKMLong.feather"
 geneExprData <- synGet(geneExprDataId)$path %>%
   read_tsv() %>%
   filter(stringr::str_detect(Model, "Diagnosis")) %>%
-  rename(Sex=Gender) %>%
   mutate(hgnc_symbol=ifelse(is.na(hgnc_symbol), ensembl_gene_id, hgnc_symbol),
-         Sex=forcats::fct_recode(Sex, Males="MALE",
-                                 Females="FEMALE",
-                                 `Males and Females`="ALL"),
          Model=stringr::str_replace(Model, "\\.", " x "),
+         Model=stringr::str_replace(Model, "SourceDiagnosis", "Study-specific Diagnosis"),
          neg.log10.adj.P.Val=-log10(adj.P.Val)) %>% 
   tidyr::unite("tissue_study", Tissue, Study, sep=", ", remove=FALSE) %>% 
   tidyr::unite("model_sex", Model, Sex, sep=", ", remove=FALSE) %>% 
@@ -48,7 +45,7 @@ fGeneExprDataFeather <- synStore(File(paste0(fGeneExprDataOutputFilePrefix, ".fe
                                  used=c(geneExprDataId),
                                  forceVersion=FALSE)
 
-fGeneExprDataCsv <- synStore(File(paste0(fGeneExprDataOutputFilePrefix, "csv"),
+fGeneExprDataCsv <- synStore(File(paste0(fGeneExprDataOutputFilePrefix, ".csv"),
                                   parent=wotFolderId),
                              used=c(geneExprDataId),
                              forceVersion=FALSE)
