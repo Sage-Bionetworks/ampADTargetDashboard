@@ -33,9 +33,9 @@ geneExprData <- synGet(geneExprDataId)$path %>%
          Model=stringr::str_replace(Model, "SourceDiagnosis", "Study-specific Diagnosis"),
          neg.log10.adj.P.Val=-log10(adj.P.Val)) %>% 
   tidyr::unite("tissue_study", Tissue, Study, sep=", ", remove=FALSE) %>% 
-  tidyr::unite("model_sex", Model, Sex, sep=", ", remove=FALSE) %>% 
+  tidyr::unite("comparison_model_sex", Comparison, Model, Sex, sep=", ", remove=FALSE) %>% 
   mutate(tissue_study_pretty=glue::glue("{tissue} ({study})", tissue=Tissue, study=Study),
-         model_sex_pretty=glue::glue("{model} ({sex})", model=Model, sex=Sex)) 
+         comparison_model_sex_pretty=glue::glue("{comparison} {model} ({sex})", comparison=Comparison, model=Model, sex=Sex)) 
 
 feather::write_feather(geneExprData, paste0(fGeneExprDataOutputFilePrefix, ".feather"))
 readr::write_csv(geneExprData, paste0(fGeneExprDataOutputFilePrefix, ".csv"))

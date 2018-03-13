@@ -11,8 +11,8 @@ shinyServer(function(input, output, session) {
 
   foo <- observeEvent(input$cookie, {
 
-    synLogin(sessionToken=input$cookie)
-    # synLogin(silent=TRUE)
+    #synLogin(sessionToken=input$cookie)
+    synLogin(silent=TRUE)
     withProgress(message = 'Loading data...',
                  {source("load.R")})
     
@@ -257,7 +257,7 @@ shinyServer(function(input, output, session) {
     output$forest <- renderPlot({
       params <- data.frame(hgnc_symbol=selectedGene(), 
                            comparison_model_sex=input$Model) %>% 
-        separate(model_sex, into=c("Comparison", "Model", "Sex"), sep=", ") %>% 
+        separate(comparison_model_sex, into=c("Comparison", "Model", "Sex"), sep=", ") %>% 
         select(-Sex)
       
       dForPlot <- inner_join(geneExprData, params) %>% 
