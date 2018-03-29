@@ -307,23 +307,30 @@ shinyServer(function(input, output, session) {
         
       dForPlot <- inner_join(geneExprData, params)
       
-      dForPlotFiltered <- dForPlot %>% filter(abs(logFC) > 0.5)
-      dForPlotContour <- dForPlot %>% dplyr::sample_frac(0.1, replace=FALSE)
+      
+      dTargets <- dForPlot %>% 
+        dplyr::filter(hgnc_symbol %in% targetManifest$Gene)
+      
+      dSummary <- dForPlot %>% summarize(xmin=min(logFC), 
+                                         xmax=max(logFC), 
+                                         ymin=0, 
+                                         ymax=max(neg.log10.adj.P.Val))
       
       dIsSelected <- dForPlot %>% filter(hgnc_symbol == geneName)
       
       p <- ggplot(dForPlot)
-      # p <- p + geom_point(aes(x=logFC, y=neg.log10.adj.P.Val, label=hgnc_symbol), 
-      #                     data=dForPlotFiltered, alpha=(1/3))
-      p <- p + geom_point(aes(x=logFC, y=neg.log10.adj.P.Val, label=hgnc_symbol), alpha=(1/3))
-      p <- p + geom_density_2d(aes(x=logFC, y=neg.log10.adj.P.Val), binwidth=0.025, 
-                               data=dForPlotContour)
+      p <- p + geom_point(aes(x=logFC, y=neg.log10.adj.P.Val, label=hgnc_symbol), alpha=(1/3),
+                          data=dTargets)
+      p <- p + geom_density_2d(aes(x=logFC, y=neg.log10.adj.P.Val), bins=30, 
+                              data=dForPlot)
       p <- p + geom_point(aes(x=logFC, y=neg.log10.adj.P.Val, label=hgnc_symbol), 
                           data=dIsSelected, shape=21, color="red", fill="white", 
                           size=1, stroke=2)
-      
+      p <-p + coord_cartesian(xlim=c(dSummary$xmin, dSummary$xmax),
+                              ylim=c(dSummary$ymin, dSummary$ymax))
       p <- p + theme_minimal()
       p <- p + labs(x="Log Fold Change", y="-log10(Adjusted p-value)")
+      p
       
       ggplotly(p) %>% config(displayModeBar = F)
     })
