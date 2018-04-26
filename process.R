@@ -1,8 +1,8 @@
 library(tidyverse)
-library(synapseClient)
+library(synapser)
 library(feather)
 
-synapseLogin()
+synLogin()
 
 wotFolderId <- 'syn7525089'
 scoreDataId <- 'syn11688680'
@@ -12,8 +12,8 @@ targetListOutputFile <- "./targetList.csv"
 targetListDistinctOutputFile <- "./targetListDistinct.csv"
 targetManifestOutputFile <- "./targetManifest.csv"
 
-scoreData <- synGet(scoreDataId) %>% 
-  getFileLocation() %>% read_csv() %>% 
+scoreData <- synGet(scoreDataId)$path %>% 
+  read_csv() %>% 
   rename(ensembl.gene=gene, Score=adDriverScore, Gene=external_gene_name)
 
 ####### Process target list
