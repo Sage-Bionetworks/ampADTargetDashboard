@@ -121,8 +121,11 @@ dashboardPage(
                     textOutput("de"),
                     splitLayout(cellWidths = c("60%", "40%"),
                                 cellArgs = list(style = "padding: 2px"),
-                                tagList(h3("Volcano Plot"),
-                                        plotlyOutput("volcano", width="95%")),
+                                tagList(h3("Box Plots"),
+                                        p("These box plots show the distribution of the effect size (log fold change) and significance (-log10(adjusted p-value) of the selected gene in the context of all genes of the selected tissue and model.", style = "word-wrap: break-word;"),
+                                        p("The selected gene is shown as a large red dot.", style = "word-wrap: break-word;"),
+                                        p("The current mouseovers are not informative. I would expect to show the box and whisker bounds by default (no hover), and the value of fold change or p-value (NOT the log p-value) of the red dot.", style = "word-wrap: break-word;"),
+                                        plotlyOutput("boxplot", width="95%")),
                                 tagList(h3("Log fold change forest plot"), 
                                         plotOutput("forest", width="95%")))
                 )

@@ -6,13 +6,13 @@ library(wesanderson)
 shinyServer(function(input, output, session) {
   addClass(selector = "body", class = "sidebar-collapse")
   
-  session$sendCustomMessage(type="readCookie",
-                            message=list(name='org.sagebionetworks.security.user.login.token'))
-
-  foo <- observeEvent(input$cookie, {
-
-    synLogin(sessionToken=input$cookie)
-    # synLogin(silent=TRUE)
+  # session$sendCustomMessage(type="readCookie",
+  #                           message=list(name='org.sagebionetworks.security.user.login.token'))
+  # 
+  # foo <- observeEvent(input$cookie, {
+  # 
+  #   synLogin(sessionToken=input$cookie)
+    synLogin(silent=TRUE)
     withProgress(message = 'Loading data...',
                  {source("load.R")})
     
@@ -291,7 +291,7 @@ shinyServer(function(input, output, session) {
     
     })
     
-    output$volcano <- renderPlotly({
+    output$boxplot <- renderPlotly({
       
       geneName <- selectedGene()
       
@@ -300,18 +300,33 @@ shinyServer(function(input, output, session) {
         separate(tissue_study, into=c("Tissue", "Study"), sep=", ") %>% 
         separate(model_sex, into=c("Comparison", "Model", "Sex"), sep=", ")
         
-      dForPlot <- inner_join(geneExprData, params)
-      dIsSelected <- dForPlot %>% filter(hgnc_symbol == geneName)
+      dForPlot <- inner_join(geneExprData, params) %>% 
+        mutate(src="Gene")
       
-      p <- ggplot(dForPlot)
-      p <- p + geom_point(aes(x=logFC, y=neg.log10.adj.P.Val, label=hgnc_symbol), alpha=(1/3))
-      p <- p + geom_point(aes(x=logFC, y=neg.log10.adj.P.Val, label=hgnc_symbol), 
-                          data=dIsSelected, shape=21, color="red", fill="white", 
-                          size=1, stroke=2)
+      dForPlot2 <- dForPlot %>% 
+        select(hgnc_symbol, `log2(fold change)`=logFC, 
+               `-log10(adjusted p-value)`=neg.log10.adj.P.Val) %>% 
+        gather(src, myval, `log2(fold change)`, `-log10(adjusted p-value)`) %>% select(hgnc_symbol, src, myval)
       
-      p <- p + theme_minimal()
-      p <- p + labs(x="Log Fold Change", y="-log10(Adjusted p-value)")
+      dForPlot2Selected <- dForPlot2 %>% 
+        filter(hgnc_symbol == geneName)
       
+      p <- ggplot(dForPlot2) + 
+        geom_boxplot(aes(x=src, y=myval), alpha=1/3) + 
+        facet_wrap( ~ src, scales="free", nrow=2) + 
+        coord_flip() + 
+        theme(axis.text.y=element_blank(), 
+              axis.title.y=element_blank(), 
+              axis.title.x=element_blank())
+      
+      p <- p + geom_point(data=dForPlot2Selected, 
+                          aes(x=src, y=myval, label=hgnc_symbol), 
+                          color="red", size=4)
+      
+      p <- p + theme_minimal() + 
+        theme(axis.text=element_blank(), 
+              axis.title = element_blank())
+
       ggplotly(p) %>% config(displayModeBar = F)
     })
     
@@ -436,5 +451,5 @@ shinyServer(function(input, output, session) {
     #           legend.position="bottom")
     # })
     
-  })
+  # })
 })
