@@ -28,3 +28,6 @@ mssmNetwork.csv
 reurgentdatastillneededformssmcleanup.zip
 key.json
 restart.txt
+*.csv
+*.feather
+*.RData
