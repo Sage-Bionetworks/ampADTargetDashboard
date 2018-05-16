@@ -315,7 +315,9 @@ shinyServer(function(input, output, session) {
         geom_boxplot(aes(x=src, y=myval), alpha=1/3) + 
         facet_wrap( ~ src, scales="free", nrow=2) + 
         coord_flip() + 
-        theme(axis.text.y=element_blank(), 
+        theme(strip.background=element_blank(), 
+              strip.text=element_blank(), 
+              # axis.text.y=element_blank(),
               axis.title.y=element_blank(), 
               axis.title.x=element_blank())
       
